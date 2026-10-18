@@ -134,6 +134,12 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .nslot textarea{min-height:64px}
 .free{min-height:96px;font-size:14px}
 .nfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.sync{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:700px){.sync{grid-template-columns:minmax(0,1fr)}}
+.sync>div{display:grid;gap:8px;align-content:start;min-width:0}
+.sync p{margin:0;color:var(--muted);font-size:13px}
+.code{font-family:var(--mono);font-size:12px;background:var(--felt);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;min-height:76px;resize:vertical;word-break:break-all}
+.sync .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 </head>
@@ -206,6 +212,20 @@ td.combo{font-family:var(--mono);white-space:nowrap}
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
       <div class="histwrap"><table><thead><tr><th>#</th><th>Дата</th><th>Комбинация</th><th>Въпроси</th><th>Опити</th><th>Резултат</th></tr></thead><tbody id="hist"></tbody></table></div>
+    </div>
+    <div class="sync">
+      <div>
+        <div class="eyebrow">Код на това устройство</div>
+        <p>Копирай кода и го постави на другото устройство.</p>
+        <textarea class="code" id="exportCode" readonly aria-label="Код за пренос"></textarea>
+        <div class="row2"><button class="btn" id="copyCode" style="padding:6px 14px;font-size:13px">Копирай кода</button></div>
+      </div>
+      <div>
+        <div class="eyebrow">Обедини с код от друго устройство</div>
+        <p>Игрите се добавят към тукашните. Повтарящи се игри не се броят два пъти.</p>
+        <textarea class="code" id="importCode" aria-label="Постави код" placeholder="Постави кода тук…"></textarea>
+        <div class="row2"><button class="btn primary" id="mergeBtn" style="padding:6px 14px;font-size:13px">Обедини</button><span class="msg" id="syncMsg" role="status"></span></div>
+      </div>
     </div>
   </section>
 </div>
@@ -365,6 +385,7 @@ function renderLog(){
 }
 
 function renderStats(){
+  $('exportCode').value=exportCode();
   const G=store.games,W=G.filter(x=>x.won);
   const avg=a=>a.length?(a.reduce((s,x)=>s+x,0)/a.length).toFixed(1):'–';
   const best=W.length?Math.min(...W.map(x=>x.q+x.g)):'–';
@@ -395,6 +416,32 @@ let clearArmed=false;
 $('clearNotes').onclick=()=>{const b=$('clearNotes');if(!clearArmed){clearArmed=true;b.textContent='Натисни пак, за да изчистиш';setTimeout(()=>{clearArmed=false;b.textContent='Изчисти бележките';},4000);return;}
   clearArmed=false;b.textContent='Изчисти бележките';store.current.notes=null;save();renderNotes();};
 $('notes').addEventListener('toggle',()=>{store.notesOpen=$('notes').open;save();});
+
+function exportCode(){
+  const body=store.games.map(x=>[x.d.toString(36),x.cards.map(c=>c.v.toString(16)+c.s).join(''),x.q,x.g,x.won?1:0].join('.')).join('~');
+  return 'OK1-'+btoa(body);
+}
+function parseCode(code){
+  code=code.trim().replace(/\s+/g,'');
+  if(!code.startsWith('OK1-'))throw new Error('Кодът трябва да започва с OK1-. Копирай го целия от другото устройство.');
+  const body=atob(code.slice(4));if(!body)return [];
+  return body.split('~').map(r=>{const [d,cs,q,g,w]=r.split('.');
+    const cards=cs.match(/[0-9a-d][CDHS]/g);if(!cards||cards.length!==8)throw new Error('Кодът е повреден.');
+    return {d:parseInt(d,36),cards:cards.map(t=>({v:parseInt(t[0],16),s:t[1]})),q:+q,g:+g,won:w==='1'};});
+}
+$('copyCode').onclick=()=>{const t=$('exportCode');
+  const done=()=>{$('copyCode').textContent='Копирано';setTimeout(()=>$('copyCode').textContent='Копирай кода',2000);};
+  const fb=()=>{t.focus();t.select();try{document.execCommand('copy');done();}catch(e){}};
+  try{navigator.clipboard.writeText(t.value).then(done,fb);}catch(e){fb();}};
+$('mergeBtn').onclick=()=>{
+  const m=$('syncMsg');let incoming;
+  try{incoming=parseCode($('importCode').value);}catch(e){m.className='msg bad';m.textContent=e.message.startsWith('Кодът')?e.message:'Кодът не може да се прочете. Провери дали е копиран целият.';return;}
+  const key=x=>x.d+'|'+x.cards.map(c=>c.v+c.s).join('');
+  const have=new Set(store.games.map(key));let added=0;
+  for(const x of incoming)if(!have.has(key(x))){store.games.push(x);have.add(key(x));added++;}
+  store.games.sort((a,b)=>a.d-b.d);save();renderStats();renderLog();
+  $('importCode').value='';m.className='msg good';m.textContent=added?`Добавени ${added} ${added===1?'игра':'игри'}.`:'Няма нови игри, всички вече са тук.';
+};
 
 function render(){renderTable();renderLog();renderStats();}
 if(store.notesOpen)$('notes').open=true;
