@@ -134,7 +134,12 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .nslot textarea{min-height:64px}
 .free{min-height:96px;font-size:14px}
 .nfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.sync{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;border-top:1px solid var(--line);padding-top:16px}
+.syncwrap{border-top:1px solid var(--line);padding-top:12px}
+.syncwrap>summary{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:baseline}
+.syncwrap>summary::-webkit-details-marker{display:none}
+.syncwrap>summary .tw{font-family:var(--mono);color:var(--brass);transition:transform .2s}
+.syncwrap[open]>summary .tw{transform:rotate(90deg)}
+.sync{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding-top:14px}
 @media (max-width:700px){.sync{grid-template-columns:minmax(0,1fr)}}
 .sync>div{display:grid;gap:8px;align-content:start;min-width:0}
 .sync p{margin:0;color:var(--muted);font-size:13px}
@@ -213,6 +218,8 @@ td.combo{font-family:var(--mono);white-space:nowrap}
       <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
       <div class="histwrap"><table><thead><tr><th>#</th><th>Дата</th><th>Комбинация</th><th>Въпроси</th><th>Опити</th><th>Резултат</th></tr></thead><tbody id="hist"></tbody></table></div>
     </div>
+    <details class="syncwrap" id="syncwrap">
+      <summary><span class="eyebrow">Пренос между устройства</span><span class="tw">▸</span></summary>
     <div class="sync">
       <div>
         <div class="eyebrow">Код на това устройство</div>
@@ -227,6 +234,7 @@ td.combo{font-family:var(--mono);white-space:nowrap}
         <div class="row2"><button class="btn primary" id="mergeBtn" style="padding:6px 14px;font-size:13px">Обедини</button><span class="msg" id="syncMsg" role="status"></span></div>
       </div>
     </div>
+    </details>
   </section>
 </div>
 
