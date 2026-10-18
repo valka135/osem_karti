@@ -113,6 +113,27 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .pill{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid}
 .pill.w{color:var(--ok);border-color:var(--ok)}.pill.l{color:#e46a7b;border-color:#e46a7b}
 .confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted)}
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.notes>summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.notes>summary::-webkit-details-marker{display:none}
+.notes>summary .tw{font-family:var(--mono);color:var(--brass);transition:transform .2s}
+.notes[open]>summary .tw{transform:rotate(90deg)}
+.notes-body{padding:0 18px 18px;display:grid;gap:14px}
+.nslots{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.nslots{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:460px){.nslots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.nslot{border:1px solid var(--line);border-radius:10px;padding:8px;display:grid;gap:6px;min-width:0;background:var(--felt)}
+.nslot[data-suit="D"],.nslot[data-suit="H"]{border-color:#7a2a36}
+.nslot[data-suit="C"],.nslot[data-suit="S"]{border-color:#6b6070}
+.nhead{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.nhead b{font-family:var(--mono);color:var(--muted);font-size:12px}
+.nhead .big{font-size:20px;line-height:1}
+.nsuits{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.nsuits .chip{min-width:0;padding:3px 0;font-size:15px}
+.nslot textarea,.free{font:inherit;font-size:13px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:7px;padding:6px 7px;width:100%;resize:vertical}
+.nslot textarea{min-height:64px}
+.free{min-height:96px;font-size:14px}
+.nfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 </head>
@@ -143,6 +164,16 @@ td.combo{font-family:var(--mono);white-space:nowrap}
       </div>
     </div>
   </section>
+
+  <details class="notes" id="notes">
+    <summary><h2>Бележки</h2><span class="eyebrow">Само за теб · пазят се за текущата игра <span class="tw">▸</span></span></summary>
+    <div class="notes-body">
+      <div class="nslots" id="nslots"></div>
+      <label for="freeNote" class="eyebrow">Свободни бележки</label>
+      <textarea class="free" id="freeNote" placeholder="Напр. сума 3 = 25 → картинките са A, Q и Q или J, J и 2…"></textarea>
+      <div class="nfoot"><span class="pos">Бележките се изчистват при нова игра.</span><button class="btn ghost" id="clearNotes" style="padding:6px 14px;font-size:13px">Изчисти бележките</button></div>
+    </div>
+  </details>
 
   <div class="main">
     <section class="panel">
@@ -205,7 +236,7 @@ function deal(){
 }
 function newGame(){
   store.current={cards:deal(),log:[],q:0,g:0,done:false,won:false,start:Date.now(),guess:Array(8).fill('')};
-  save();render();
+  save();render();renderNotes();
 }
 
 /* ---------- answers ---------- */
@@ -351,8 +382,23 @@ $('resetBtn').onclick=()=>{
   resetArmed=false;store.games=[];save();$('resetBtn').textContent='Изчисти статистиката';renderStats();renderLog();
 };
 
+function notesObj(){const g=store.current;if(!g.notes)g.notes={suit:Array(8).fill(''),txt:Array(8).fill(''),free:''};return g.notes;}
+function renderNotes(){
+  const n=notesObj();
+  $('nslots').innerHTML=n.suit.map((su,i)=>{const S=SU[su];return `<div class="nslot" data-suit="${su}"><div class="nhead"><b>${i+1}</b><span class="big ${S&&S.red?'red-t':''}">${S?S.s:''}</span></div><div class="nsuits">${SUITS.map(s=>`<button class="chip ${s.red?'r':''}" data-ni="${i}" data-ns="${s.k}" aria-pressed="${su===s.k}" title="${s.n}" aria-label="Позиция ${i+1}: ${s.n}">${s.s}</button>`).join('')}</div><textarea id="nt${i}" data-nt="${i}" aria-label="Бележка за позиция ${i+1}" placeholder="бележка…">${n.txt[i].replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea></div>`;}).join('');
+  $('freeNote').value=n.free;
+}
+$('nslots').addEventListener('click',e=>{const b=e.target.closest('[data-ns]');if(!b)return;const n=notesObj(),i=+b.dataset.ni;n.suit[i]=n.suit[i]===b.dataset.ns?'':b.dataset.ns;save();renderNotes();});
+$('nslots').addEventListener('input',e=>{const t=e.target.closest('[data-nt]');if(!t)return;notesObj().txt[+t.dataset.nt]=t.value;save();});
+$('freeNote').addEventListener('input',e=>{notesObj().free=e.target.value;save();});
+let clearArmed=false;
+$('clearNotes').onclick=()=>{const b=$('clearNotes');if(!clearArmed){clearArmed=true;b.textContent='Натисни пак, за да изчистиш';setTimeout(()=>{clearArmed=false;b.textContent='Изчисти бележките';},4000);return;}
+  clearArmed=false;b.textContent='Изчисти бележките';store.current.notes=null;save();renderNotes();};
+$('notes').addEventListener('toggle',()=>{store.notesOpen=$('notes').open;save();});
+
 function render(){renderTable();renderLog();renderStats();}
-if(!store.current)newGame();else render();
+if(store.notesOpen)$('notes').open=true;
+if(!store.current)newGame();else{render();renderNotes();}
 renderQ();
 </script>
 </body>
