@@ -298,9 +298,12 @@ function answer(type,arg){
     }
   }
 }
+let blocked=false;
 function ask(type,arg){
   const g=store.current;if(g.done)return;
-  const r=answer(type,arg);g.q++;g.log.push({k:'q',...r});save();render();
+  const r=answer(type,arg);const last=g.log[g.log.length-1];
+  if(last&&last.k==='q'&&last.q===r.q){blocked=true;flash(`Това е същият въпрос като последния, затова не се брои. Отговорът е ${r.a}.`,'bad');return;}
+  blocked=false;g.q++;g.log.push({k:'q',...r});save();render();
 }
 
 /* ---------- question UI ---------- */
@@ -348,7 +351,7 @@ $('qlist').addEventListener('click',e=>{
   else if(id==='pos4'){if(!sel.pos4)return flash('Избери най-голяма или най-ниска.','bad');ask(id,sel.pos4);}
   else ask(id);
   if(id==='sum1')sel.sum1=[];else if(id in sel)sel[id]=null;
-  renderQ();flash('','');
+  renderQ();if(!blocked)flash('','');
 });
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{tab=t.dataset.t;document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t));renderQ();});
 
