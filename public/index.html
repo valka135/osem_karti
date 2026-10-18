@@ -288,7 +288,8 @@ $('qlist').addEventListener('click',e=>{
   else if(id==='cnt3'){if(!sel.cnt3)return flash('Избери стойност.','bad');ask(id,sel.cnt3);}
   else if(id==='pos4'){if(!sel.pos4)return flash('Избери най-голяма или най-ниска.','bad');ask(id,sel.pos4);}
   else ask(id);
-  flash('','');
+  if(id==='sum1')sel.sum1=[];else if(id in sel)sel[id]=null;
+  renderQ();flash('','');
 });
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{tab=t.dataset.t;document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t));renderQ();});
 
