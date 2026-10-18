@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Осемте карти</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a dark gaming table; face-down row of 8 cards is the hero, interrogation panel + ledger below. Deliberately single dark theme. */
+:root{
+  --bg:#120d10; --felt:#1c1418; --panel:#221a1e; --line:#3a2d33;
+  --fg:#efe6dc; --muted:#a8968c; --brass:#c9a45c; --brass-2:#e2c27f;
+  --blood:#b3263a; --ok:#5fae7d; --card:#f4ede2; --ink:#1d1517; --red:#b3263a;
+  --display:"Cormorant Garamond", Georgia, serif;
+  --body:"IBM Plex Sans", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px;
+  background-image:radial-gradient(ellipse at 50% -10%, #2b1a22 0%, var(--bg) 60%)}
+.wrap{max-width:1080px;margin:0 auto;display:grid;gap:28px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,6vw,52px);line-height:1;margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 em{font-style:italic;color:var(--brass)}
+.sub{color:var(--muted);margin:6px 0 0;max-width:60ch}
+h2{font-family:var(--display);font-size:26px;margin:0;font-weight:600}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.counters{display:flex;gap:18px;font-family:var(--mono)}
+.counter{text-align:right}
+.counter b{display:block;font-size:28px;color:var(--brass-2);font-variant-numeric:tabular-nums;line-height:1.1}
+.counter span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:var(--body)}
+
+/* table */
+.table{background:var(--felt);border:1px solid var(--line);border-radius:18px;padding:22px 18px;display:grid;gap:16px}
+.row{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.row{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.slot{display:grid;gap:8px;justify-items:center}
+.pos{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.card{width:100%;max-width:96px;aspect-ratio:5/7;border-radius:9px;position:relative;
+  background:repeating-linear-gradient(45deg,#5c1520 0 6px,#6d1a27 6px 12px);border:3px solid var(--card);
+  box-shadow:0 6px 14px rgba(0,0,0,.45);display:grid;place-items:center;transition:transform .5s}
+.card::after{content:"";position:absolute;inset:7px;border:1px solid rgba(226,194,127,.55);border-radius:4px}
+.card.face{background:var(--card);border-color:var(--card);color:var(--ink)}
+.card.face::after{display:none}
+.card .v{font-family:var(--display);font-weight:700;font-size:clamp(22px,4vw,34px);line-height:1}
+.card .s{font-size:clamp(18px,3vw,26px);line-height:1}
+.card .c{display:grid;justify-items:center;gap:2px}
+.card .tl{position:absolute;top:5px;left:7px;font-family:var(--display);font-weight:700;font-size:14px;line-height:1}
+.card.red{color:var(--red)}
+.card.hit{outline:3px solid var(--ok);outline-offset:2px}
+.card.miss{outline:3px solid var(--blood);outline-offset:2px}
+select{font:inherit;font-family:var(--mono);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:7px;padding:6px 8px;width:100%;max-width:96px;text-align:center}
+select:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--brass-2);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.btn{font:inherit;font-weight:600;border-radius:999px;padding:10px 18px;border:1px solid var(--brass);background:transparent;color:var(--brass-2);cursor:pointer}
+.btn:hover{background:rgba(201,164,92,.1)}
+.btn.primary{background:var(--brass);color:#1a1209;border-color:var(--brass)}
+.btn.primary:hover{background:var(--brass-2)}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.msg{min-height:1.5em;font-weight:500}
+.msg.bad{color:#e46a7b}.msg.good{color:var(--ok)}
+
+/* main grid */
+.main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line)}
+.tab{font:inherit;background:none;border:none;color:var(--muted);padding:8px 12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
+.tab[aria-selected="true"]{color:var(--brass-2);border-color:var(--brass)}
+.qlist{display:grid;gap:10px}
+.q{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:10px}
+@media (max-width:520px){.q{grid-template-columns:auto minmax(0,1fr)}.q .ask{grid-column:1/-1}}
+.q .tag{font-family:var(--mono);font-size:12px;color:var(--brass);white-space:nowrap}
+.q p{margin:0}
+.q .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:inherit;font-family:var(--mono);font-size:13px;min-width:34px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brass);color:#1a1209;border-color:var(--brass)}
+.chip.r{color:#e46a7b}.chip.r[aria-pressed="true"]{color:#5c1520}
+.ask{font:inherit;font-weight:600;font-size:13px;border-radius:8px;padding:8px 14px;border:1px solid var(--brass);background:transparent;color:var(--brass-2);cursor:pointer;white-space:nowrap}
+.ask:hover{background:rgba(201,164,92,.1)}
+
+.log{display:grid;gap:0;max-height:520px;overflow:auto}
+.log li{list-style:none;display:grid;grid-template-columns:2.2em minmax(0,1fr);gap:8px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.log ol{margin:0;padding:0}
+.log .n{font-family:var(--mono);color:var(--muted);font-size:12px;padding-top:2px}
+.log .qq{color:var(--muted);font-size:13px}
+.log .aa{font-family:var(--mono);color:var(--brass-2);font-weight:600}
+.log .guess .aa{color:#e46a7b}
+.empty{color:var(--muted);font-style:italic}
+
+/* stats */
+.stats{display:grid;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.kpi{border-top:2px solid var(--brass);padding-top:8px}
+.kpi b{font-family:var(--mono);font-size:24px;font-variant-numeric:tabular-nums;color:var(--fg)}
+.kpi span{display:block;font-size:12px;color:var(--muted)}
+.freq{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:4px;align-items:end;height:120px}
+.bar{display:grid;grid-template-rows:1fr auto auto;justify-items:center;gap:3px;height:100%}
+.bar i{display:block;width:70%;background:var(--brass);border-radius:3px 3px 0 0;align-self:end;min-height:2px}
+.bar small{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.bar em{font-style:normal;font-family:var(--mono);font-size:12px}
+.histwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.combo{font-family:var(--mono);white-space:nowrap}
+.red-t{color:#e46a7b}
+.pill{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid}
+.pill.w{color:var(--ok);border-color:var(--ok)}.pill.l{color:#e46a7b;border-color:#e46a7b}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Вдъхновено от финала на The Devil's Plan 2</div>
+      <h1>Осемте <em>карти</em></h1>
+      <p class="sub">Компютърът е изтеглил 8 карти. Картите от една боя стоят във възходящ ред (A=1, J=11, Q=12, K=13). Задавай въпроси и познай стойностите.</p>
+    </div>
+    <div class="counters">
+      <div class="counter"><b id="cQ">0</b><span>въпроса</span></div>
+      <div class="counter"><b id="cG">0</b><span>опита</span></div>
+      <div class="counter"><b id="cT">0</b><span>общо</span></div>
+    </div>
+  </header>
+
+  <section class="table" aria-label="Маса">
+    <div class="row" id="cards"></div>
+    <div class="row" id="guessRow"></div>
+    <div class="actions">
+      <div class="msg" id="msg" role="status"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="actBtns">
+        <button class="btn ghost" id="giveUp">Предавам се</button>
+        <button class="btn primary" id="guessBtn">Познай комбинацията</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="main">
+    <section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap">
+        <h2>Въпроси</h2><span class="eyebrow">Всеки въпрос може да се повтаря</span>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-t="sum" aria-selected="true">Сума</button>
+        <button class="tab" role="tab" data-t="cnt" aria-selected="false">Брой</button>
+        <button class="tab" role="tab" data-t="pos" aria-selected="false">Позиция</button>
+      </div>
+      <div class="qlist" id="qlist"></div>
+    </section>
+    <section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Дневник</h2><span class="eyebrow" id="gameNo"></span></div>
+      <div class="log"><ol id="log"></ol></div>
+    </section>
+  </div>
+
+  <section class="panel stats">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+      <h2>Статистика</h2>
+      <div class="confirm" id="resetBox"><button class="btn ghost" id="resetBtn" style="padding:6px 14px;font-size:13px">Изчисти статистиката</button></div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Колко пъти се е падала всяка стойност</div>
+      <div class="freq" id="freq"></div>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
+      <div class="histwrap"><table><thead><tr><th>#</th><th>Дата</th><th>Комбинация</th><th>Въпроси</th><th>Опити</th><th>Резултат</th></tr></thead><tbody id="hist"></tbody></table></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SUITS=[{k:'C',n:'спатия',g:'спатия',s:'♣',red:false},{k:'D',n:'каро',g:'каро',s:'♦',red:true},{k:'H',n:'купа',g:'купа',s:'♥',red:true},{k:'S',n:'пика',g:'пика',s:'♠',red:false}];
+const SU=Object.fromEntries(SUITS.map(s=>[s.k,s]));
+const lab=v=>RANKS[v-1];
+const isPic=v=>v===1||v>=11;
+const KEY='osemte-karti-v1';
+const $=id=>document.getElementById(id);
+
+let store={games:[],current:null};
+try{const raw=localStorage.getItem(KEY);if(raw)store=JSON.parse(raw);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+
+function deal(){
+  const deck=[];for(const s of SUITS)for(let v=1;v<=13;v++)deck.push({v,s:s.k});
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  const cards=deck.slice(0,8);
+  for(const s of SUITS){
+    const idx=cards.map((c,i)=>c.s===s.k?i:-1).filter(i=>i>=0);
+    const vals=idx.map(i=>cards[i].v).sort((a,b)=>a-b);
+    idx.forEach((i,k)=>cards[i]={v:vals[k],s:s.k});
+  }
+  return cards;
+}
+function newGame(){
+  store.current={cards:deal(),log:[],q:0,g:0,done:false,won:false,start:Date.now(),guess:Array(8).fill('')};
+  save();render();
+}
+
+/* ---------- answers ---------- */
+const posList=a=>a.length?a.map(i=>i+1).join(', '):'няма';
+function groupsText(gs){return gs.length?gs.map(g=>'['+g.map(i=>i+1).join(', ')+']').join('  '):'няма'}
+function answer(type,arg){
+  const c=store.current.cards;const V=c.map(x=>x.v);
+  switch(type){
+    case 'sum1':return {q:`Сума 1 · сбор на позиции ${arg.map(i=>i+1).join(', ')}`,a:String(arg.reduce((s,i)=>s+V[i],0))};
+    case 'sum2':return {q:`Сума 2 · сбор на ${SU[arg].n} ${SU[arg].s}`,a:String(c.filter(x=>x.s===arg).reduce((s,x)=>s+x.v,0))};
+    case 'sum3':return {q:'Сума 3 · сбор на картинките (A, J, Q, K)',a:String(V.filter(isPic).reduce((a,b)=>a+b,0))};
+    case 'sum4':return {q:'Сума 4 · сбор на числата (2–10)',a:String(V.filter(v=>!isPic(v)).reduce((a,b)=>a+b,0))};
+    case 'cnt1':return {q:'Брой 1 · колко картинки (A, J, Q, K)',a:String(V.filter(isPic).length)};
+    case 'cnt2':return {q:'Брой 2 · колко числа (2–10)',a:String(V.filter(v=>!isPic(v)).length)};
+    case 'cnt3':return {q:`Брой 3 · колко карти ${lab(arg)}`,a:String(V.filter(v=>v===arg).length)};
+    case 'pos1':return {q:`Позиция 1 · къде е ${SU[arg].n} ${SU[arg].s}`,a:posList(c.map((x,i)=>x.s===arg?i:-1).filter(i=>i>=0))};
+    case 'pos2':{
+      const m={};V.forEach((v,i)=>(m[v]=m[v]||[]).push(i));
+      const gs=Object.values(m).filter(g=>g.length>1).sort((a,b)=>a[0]-b[0]);
+      return {q:'Позиция 2 · карти с еднаква стойност',a:groupsText(gs)};
+    }
+    case 'pos3':{
+      const uniq=[...new Set(V)].sort((a,b)=>a-b);const runs=[];let cur=[uniq[0]];
+      for(let k=1;k<uniq.length;k++){if(uniq[k]===uniq[k-1]+1)cur.push(uniq[k]);else{runs.push(cur);cur=[uniq[k]];}}runs.push(cur);
+      const gs=runs.filter(r=>r.length>1).map(r=>V.map((v,i)=>r.includes(v)?i:-1).filter(i=>i>=0)).sort((a,b)=>a[0]-b[0]);
+      return {q:'Позиция 3 · карти с последователни стойности',a:groupsText(gs)};
+    }
+    case 'pos4':{
+      const t=arg==='max'?Math.max(...V):Math.min(...V);
+      return {q:`Позиция 4 · къде е ${arg==='max'?'най-голямата':'най-ниската'} стойност`,a:posList(V.map((v,i)=>v===t?i:-1).filter(i=>i>=0))};
+    }
+  }
+}
+function ask(type,arg){
+  const g=store.current;if(g.done)return;
+  const r=answer(type,arg);g.q++;g.log.push({k:'q',...r});save();render();
+}
+
+/* ---------- question UI ---------- */
+const sel={sum1:[],sum2:null,cnt3:null,pos1:null,pos4:null};
+const Q={
+  sum:[
+    {id:'sum1',tag:'Сума 1',t:'Избери 3 позиции. Какъв е сборът на картите там?',opts:'pos3'},
+    {id:'sum2',tag:'Сума 2',t:'Избери боя. Какъв е сборът на картите от нея?',opts:'suit'},
+    {id:'sum3',tag:'Сума 3',t:'Какъв е сборът на картинките (A, J, Q, K)?'},
+    {id:'sum4',tag:'Сума 4',t:'Какъв е сборът на числата (2–10)?'}],
+  cnt:[
+    {id:'cnt1',tag:'Брой 1',t:'Колко картинки има общо (A, J, Q, K)?'},
+    {id:'cnt2',tag:'Брой 2',t:'Колко числа има общо (2–10)?'},
+    {id:'cnt3',tag:'Брой 3',t:'Избери стойност. Колко такива карти има?',opts:'rank'}],
+  pos:[
+    {id:'pos1',tag:'Позиция 1',t:'Избери боя. На кои позиции са картите от нея?',opts:'suit'},
+    {id:'pos2',tag:'Позиция 2',t:'На кои позиции са картите с еднаква стойност?'},
+    {id:'pos3',tag:'Позиция 3',t:'На кои позиции са картите с последователни стойности?'},
+    {id:'pos4',tag:'Позиция 4',t:'На коя позиция е най-голямата или най-ниската стойност?',opts:'minmax'}]
+};
+let tab='sum';
+function renderQ(){
+  const box=$('qlist');box.innerHTML='';
+  for(const q of Q[tab]){
+    const d=document.createElement('div');d.className='q';
+    let opts='';
+    if(q.opts==='pos3')opts=[...Array(8)].map((_,i)=>`<button class="chip" data-q="${q.id}" data-v="${i}" aria-pressed="${sel.sum1.includes(i)}">${i+1}</button>`).join('');
+    if(q.opts==='suit')opts=SUITS.map(s=>`<button class="chip ${s.red?'r':''}" data-q="${q.id}" data-v="${s.k}" aria-pressed="${sel[q.id]===s.k}" title="${s.n}">${s.s} ${s.n}</button>`).join('');
+    if(q.opts==='rank')opts=RANKS.map((r,i)=>`<button class="chip" data-q="${q.id}" data-v="${i+1}" aria-pressed="${sel.cnt3===i+1}">${r}</button>`).join('');
+    if(q.opts==='minmax')opts=[['max','Най-голяма'],['min','Най-ниска']].map(([k,n])=>`<button class="chip" data-q="pos4" data-v="${k}" aria-pressed="${sel.pos4===k}">${n}</button>`).join('');
+    d.innerHTML=`<span class="tag">${q.tag}</span><div><p>${q.t}</p>${opts?`<div class="opts">${opts}</div>`:''}</div><button class="ask" data-ask="${q.id}">Питай</button>`;
+    box.appendChild(d);
+  }
+}
+$('qlist').addEventListener('click',e=>{
+  const ch=e.target.closest('.chip');
+  if(ch){const id=ch.dataset.q,v=ch.dataset.v;
+    if(id==='sum1'){const i=+v,a=sel.sum1;if(a.includes(i))a.splice(a.indexOf(i),1);else{if(a.length>=3)a.shift();a.push(i);}}
+    else if(id==='cnt3')sel.cnt3=+v;else sel[id]=v;
+    renderQ();return;}
+  const b=e.target.closest('[data-ask]');if(!b)return;const id=b.dataset.ask;
+  if(id==='sum1'){if(sel.sum1.length!==3)return flash('Избери точно 3 позиции.','bad');ask('sum1',[...sel.sum1].sort((a,b)=>a-b));}
+  else if(['sum2','pos1'].includes(id)){if(!sel[id])return flash('Избери боя.','bad');ask(id,sel[id]);}
+  else if(id==='cnt3'){if(!sel.cnt3)return flash('Избери стойност.','bad');ask(id,sel.cnt3);}
+  else if(id==='pos4'){if(!sel.pos4)return flash('Избери най-голяма или най-ниска.','bad');ask(id,sel.pos4);}
+  else ask(id);
+  flash('','');
+});
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{tab=t.dataset.t;document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t));renderQ();});
+
+/* ---------- table ---------- */
+function flash(t,c){const m=$('msg');m.textContent=t;m.className='msg '+(c||'');}
+function cardFace(c){const s=SU[c.s];return `<div class="card face ${s.red?'red':''}"><span class="tl">${lab(c.v)}</span><div class="c"><span class="v">${lab(c.v)}</span><span class="s">${s.s}</span></div></div>`;}
+function renderTable(){
+  const g=store.current;const cards=$('cards'),gr=$('guessRow');
+  cards.innerHTML=g.cards.map((c,i)=>{
+    let html=g.done?cardFace(c):'<div class="card"></div>';
+    if(g.done&&g.guess[i]!==''){html=html.replace('class="card face','class="card face '+(+g.guess[i]===c.v?'hit':'miss'));}
+    return `<div class="slot"><span class="pos">${i+1}</span>${html}</div>`;}).join('');
+  gr.innerHTML=g.cards.map((_,i)=>`<div class="slot"><select id="g${i}" aria-label="Позиция ${i+1}" ${g.done?'disabled':''}><option value="">?</option>${RANKS.map((r,k)=>`<option value="${k+1}" ${+g.guess[i]===k+1?'selected':''}>${r}</option>`).join('')}</select></div>`).join('');
+  gr.querySelectorAll('select').forEach((s,i)=>s.onchange=()=>{g.guess[i]=s.value;save();});
+  $('actBtns').innerHTML=g.done?'<button class="btn primary" id="newBtn">Нова игра</button>':'<button class="btn ghost" id="giveUp">Предавам се</button><button class="btn primary" id="guessBtn">Познай комбинацията</button>';
+  if(g.done)$('newBtn').onclick=()=>{flash('');newGame();};
+  else{$('guessBtn').onclick=doGuess;$('giveUp').onclick=giveUp;}
+}
+let giveArmed=false;
+function giveUp(){
+  if(!giveArmed){giveArmed=true;flash('Натисни „Предавам се“ още веднъж, за да видиш картите.','bad');setTimeout(()=>giveArmed=false,4000);return;}
+  giveArmed=false;finish(false);flash('Ето каква беше комбинацията.','bad');
+}
+function doGuess(){
+  const g=store.current;
+  if(g.guess.some(x=>x===''))return flash('Попълни стойност за всичките 8 позиции.','bad');
+  g.g++;const ok=g.guess.every((v,i)=>+v===g.cards[i].v);
+  g.log.push({k:'g',q:'Опит: '+g.guess.map(v=>lab(+v)).join(' · '),a:ok?'вярно':'грешно'});
+  if(ok){finish(true);flash(`Позна! ${g.q} въпроса и ${g.g} ${g.g===1?'опит':'опита'}.`,'good');}
+  else{save();render();flash('Не е вярно. Продължавай.','bad');}
+}
+function finish(won){
+  const g=store.current;g.done=true;g.won=won;
+  store.games.push({d:Date.now(),cards:g.cards,q:g.q,g:g.g,won});save();render();
+}
+
+function renderLog(){
+  const g=store.current;$('gameNo').textContent='Игра №'+(store.games.length+(g.done?0:1));
+  $('log').innerHTML=g.log.length?g.log.map((e,i)=>`<li class="${e.k==='g'?'guess':''}"><span class="n">${i+1}.</span><div><div class="qq">${e.q}</div><div class="aa" style="${e.a==='вярно'?'color:var(--ok)':''}">${e.a}</div></div></li>`).join(''):'<li><span></span><span class="empty">Още няма въпроси. Започни от панела вляво.</span></li>';
+  const l=document.querySelector('.log');l.scrollTop=l.scrollHeight;
+  $('cQ').textContent=g.q;$('cG').textContent=g.g;$('cT').textContent=g.q+g.g;
+}
+
+function renderStats(){
+  const G=store.games,W=G.filter(x=>x.won);
+  const avg=a=>a.length?(a.reduce((s,x)=>s+x,0)/a.length).toFixed(1):'–';
+  const best=W.length?Math.min(...W.map(x=>x.q+x.g)):'–';
+  $('kpis').innerHTML=[
+    [G.length,'изиграни игри'],[W.length,'познати'],[G.length?Math.round(W.length/G.length*100)+'%':'–','успеваемост'],
+    [avg(W.map(x=>x.q)),'ср. въпроси при успех'],[avg(W.map(x=>x.g)),'ср. опити при успех'],[best,'най-добър резултат (общо ходове)']
+  ].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join('');
+  const f=Array(13).fill(0);G.forEach(x=>x.cards.forEach(c=>f[c.v-1]++));const mx=Math.max(1,...f);
+  $('freq').innerHTML=f.map((n,i)=>`<div class="bar"><i style="height:${n/mx*100}%"></i><em>${n}</em><small>${RANKS[i]}</small></div>`).join('');
+  $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${i+1}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
+}
+let resetArmed=false;
+$('resetBtn').onclick=()=>{
+  if(!resetArmed){resetArmed=true;$('resetBtn').textContent='Сигурна ли си? Натисни пак';setTimeout(()=>{resetArmed=false;$('resetBtn').textContent='Изчисти статистиката';},4000);return;}
+  resetArmed=false;store.games=[];save();$('resetBtn').textContent='Изчисти статистиката';renderStats();renderLog();
+};
+
+function render(){renderTable();renderLog();renderStats();}
+if(!store.current)newGame();else render();
+renderQ();
+</script>
+</body>
+</html>
