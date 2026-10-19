@@ -145,8 +145,10 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .sync p{margin:0;color:var(--muted);font-size:13px}
 .code{font-family:var(--mono);font-size:12px;background:var(--felt);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;min-height:76px;resize:vertical;word-break:break-all}
 .sync .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.qstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 28px}
-@media (max-width:600px){.qstats{grid-template-columns:minmax(0,1fr)}}
+.qstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 28px}
+@media (max-width:520px){.qstats{grid-template-columns:minmax(0,1fr)}}
+.qcol{display:grid;gap:6px;align-content:start;min-width:0}
+.qcol h3{margin:0 0 2px;font-family:var(--display);font-size:19px;font-weight:600;color:var(--fg)}
 .qrow{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.2em;gap:10px;align-items:center;font-size:13px}
 .qrow .ql{font-family:var(--mono);color:var(--brass)}
 .qrow .qt{height:8px;background:var(--felt);border-radius:4px;overflow:hidden}
@@ -425,7 +427,8 @@ function renderStats(){
   $('freq').innerHTML=f.map((n,i)=>`<div class="bar"><i style="height:${n/mx*100}%"></i><em>${n}</em><small>${RANKS[i]}</small></div>`).join('');
   const QG=G.filter(x=>x.qc);
   const qav=QIDS.map(i=>QG.length?QG.reduce((s,x)=>s+(x.qc[i]||0),0)/QG.length:0);const qmx=Math.max(0.0001,...qav);
-  $('qstats').innerHTML=QIDS.map((i,k)=>`<div class="qrow"><span class="ql">${QLAB[i]}</span><span class="qt"><i style="width:${qav[k]/qmx*100}%"></i></span><span class="qv">${QG.length?qav[k].toFixed(2):'–'}</span></div>`).join('');
+  const row=i=>{const k=QIDS.indexOf(i);return `<div class="qrow"><span class="ql">${QLAB[i]}</span><span class="qt"><i style="width:${qav[k]/qmx*100}%"></i></span><span class="qv">${QG.length?qav[k].toFixed(2):'–'}</span></div>`;};
+  $('qstats').innerHTML=[['Сума','sum'],['Брой','cnt'],['Позиция','pos']].map(([t,p])=>`<div class="qcol"><h3>${t}</h3>${QIDS.filter(i=>i.startsWith(p)).map(row).join('')}</div>`).join('');
   $('qstatsNote').textContent=QG.length?`По данни от ${QG.length} ${QG.length===1?'игра':'игри'}.`+(QG.length<G.length?` ${G.length-QG.length} по-стари игри не са включени, защото за тях не е записано кои въпроси са зададени.`:''):'Ще се попълни след първата завършена игра.';
   const hm=$('histMore');hm.hidden=G.length<=10;hm.textContent=histAll?'Покажи само последните 10':`Покажи всички (${G.length})`;
   $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().slice(0,histAll?G.length:10).map(({x,i})=>`<tr><td>${i+1}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
