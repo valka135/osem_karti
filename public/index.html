@@ -145,6 +145,13 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .sync p{margin:0;color:var(--muted);font-size:13px}
 .code{font-family:var(--mono);font-size:12px;background:var(--felt);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;min-height:76px;resize:vertical;word-break:break-all}
 .sync .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.qstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 28px}
+@media (max-width:600px){.qstats{grid-template-columns:minmax(0,1fr)}}
+.qrow{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.2em;gap:10px;align-items:center;font-size:13px}
+.qrow .ql{font-family:var(--mono);color:var(--brass)}
+.qrow .qt{height:8px;background:var(--felt);border-radius:4px;overflow:hidden}
+.qrow .qt i{display:block;height:100%;background:var(--brass);border-radius:4px}
+.qrow .qv{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 </head>
@@ -213,6 +220,11 @@ td.combo{font-family:var(--mono);white-space:nowrap}
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Колко пъти се е падала всяка стойност</div>
       <div class="freq" id="freq"></div>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Колко пъти задаваш всеки въпрос средно в игра</div>
+      <div class="qstats" id="qstats"></div>
+      <p class="pos" id="qstatsNote" style="margin:8px 0 0"></p>
     </div>
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
@@ -298,6 +310,9 @@ function answer(type,arg){
     }
   }
 }
+const QIDS=['sum1','sum2','sum3','sum4','cnt1','cnt2','cnt3','pos1','pos2','pos3','pos4'];
+const QLAB={sum1:'Сума 1',sum2:'Сума 2',sum3:'Сума 3',sum4:'Сума 4',cnt1:'Брой 1',cnt2:'Брой 2',cnt3:'Брой 3',pos1:'Позиция 1',pos2:'Позиция 2',pos3:'Позиция 3',pos4:'Позиция 4'};
+function qcFromLog(log){const qc={};for(const e of log){if(e.k!=='q')continue;const id=QIDS.find(i=>QLAB[i]===e.q.split(' · ')[0]);if(id)qc[id]=(qc[id]||0)+1;}return qc;}
 let blocked=false;
 function ask(type,arg){
   const g=store.current;if(g.done)return;
@@ -385,7 +400,7 @@ function doGuess(){
 }
 function finish(won){
   const g=store.current;g.done=true;g.won=won;
-  store.games.push({d:Date.now(),cards:g.cards,q:g.q,g:g.g,won});save();render();
+  store.games.push({d:Date.now(),cards:g.cards,q:g.q,g:g.g,won,qc:qcFromLog(g.log)});save();render();
 }
 
 function renderLog(){
@@ -406,6 +421,10 @@ function renderStats(){
   ].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join('');
   const f=Array(13).fill(0);G.forEach(x=>x.cards.forEach(c=>f[c.v-1]++));const mx=Math.max(1,...f);
   $('freq').innerHTML=f.map((n,i)=>`<div class="bar"><i style="height:${n/mx*100}%"></i><em>${n}</em><small>${RANKS[i]}</small></div>`).join('');
+  const QG=G.filter(x=>x.qc);
+  const qav=QIDS.map(i=>QG.length?QG.reduce((s,x)=>s+(x.qc[i]||0),0)/QG.length:0);const qmx=Math.max(0.0001,...qav);
+  $('qstats').innerHTML=QIDS.map((i,k)=>`<div class="qrow"><span class="ql">${QLAB[i]}</span><span class="qt"><i style="width:${qav[k]/qmx*100}%"></i></span><span class="qv">${QG.length?qav[k].toFixed(2):'–'}</span></div>`).join('');
+  $('qstatsNote').textContent=QG.length?`По данни от ${QG.length} ${QG.length===1?'игра':'игри'}.`+(QG.length<G.length?` ${G.length-QG.length} по-стари игри не са включени, защото за тях не е записано кои въпроси са зададени.`:''):'Ще се попълни след първата завършена игра.';
   $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${i+1}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
 }
 let resetArmed=false;
@@ -429,16 +448,16 @@ $('clearNotes').onclick=()=>{const b=$('clearNotes');if(!clearArmed){clearArmed=
 $('notes').addEventListener('toggle',()=>{store.notesOpen=$('notes').open;save();});
 
 function exportCode(){
-  const body=store.games.map(x=>[x.d.toString(36),x.cards.map(c=>c.v.toString(16)+c.s).join(''),x.q,x.g,x.won?1:0].join('.')).join('~');
+  const body=store.games.map(x=>[x.d.toString(36),x.cards.map(c=>c.v.toString(16)+c.s).join(''),x.q,x.g,x.won?1:0,x.qc?QIDS.map(i=>x.qc[i]||0).join('_'):''].join('.')).join('~');
   return 'OK1-'+btoa(body);
 }
 function parseCode(code){
   code=code.trim().replace(/\s+/g,'');
   if(!code.startsWith('OK1-'))throw new Error('Кодът трябва да започва с OK1-. Копирай го целия от другото устройство.');
   const body=atob(code.slice(4));if(!body)return [];
-  return body.split('~').map(r=>{const [d,cs,q,g,w]=r.split('.');
+  return body.split('~').map(r=>{const [d,cs,q,g,w,qs]=r.split('.');
     const cards=cs.match(/[0-9a-d][CDHS]/g);if(!cards||cards.length!==8)throw new Error('Кодът е повреден.');
-    return {d:parseInt(d,36),cards:cards.map(t=>({v:parseInt(t[0],16),s:t[1]})),q:+q,g:+g,won:w==='1'};});
+    return {d:parseInt(d,36),cards:cards.map(t=>({v:parseInt(t[0],16),s:t[1]})),q:+q,g:+g,won:w==='1',...(qs?{qc:Object.fromEntries(qs.split('_').map((n,k)=>[QIDS[k],+n]))}:{})};});
 }
 $('copyCode').onclick=()=>{const t=$('exportCode');
   const done=()=>{$('copyCode').textContent='Копирано';setTimeout(()=>$('copyCode').textContent='Копирай кода',2000);};
@@ -449,12 +468,13 @@ $('mergeBtn').onclick=()=>{
   try{incoming=parseCode($('importCode').value);}catch(e){m.className='msg bad';m.textContent=e.message.startsWith('Кодът')?e.message:'Кодът не може да се прочете. Провери дали е копиран целият.';return;}
   const key=x=>x.d+'|'+x.cards.map(c=>c.v+c.s).join('');
   const have=new Set(store.games.map(key));let added=0;
-  for(const x of incoming)if(!have.has(key(x))){store.games.push(x);have.add(key(x));added++;}
+  for(const x of incoming){if(!have.has(key(x))){store.games.push(x);have.add(key(x));added++;}else if(x.qc){const e=store.games.find(y=>key(y)===key(x));if(e&&!e.qc)e.qc=x.qc;}}
   store.games.sort((a,b)=>a.d-b.d);save();renderStats();renderLog();
   $('importCode').value='';m.className='msg good';m.textContent=added?`Добавени ${added} ${added===1?'игра':'игри'}.`:'Няма нови игри, всички вече са тук.';
 };
 
 function render(){renderTable();renderLog();renderStats();}
+(()=>{const c=store.current,L=store.games[store.games.length-1];if(c&&c.done&&L&&!L.qc&&JSON.stringify(L.cards)===JSON.stringify(c.cards)){L.qc=qcFromLog(c.log);save();}})();
 if(store.notesOpen)$('notes').open=true;
 if(!store.current)newGame();else{render();renderNotes();}
 renderQ();
