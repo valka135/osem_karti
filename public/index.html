@@ -226,10 +226,10 @@ td.combo{font-family:var(--mono);white-space:nowrap}
       <div class="qstats" id="qstats"></div>
       <p class="pos" id="qstatsNote" style="margin:8px 0 0"></p>
     </div>
-    <details class="syncwrap" id="histbox">
-      <summary><span class="eyebrow">Изиграни комбинации <span id="histCount"></span></span><span class="tw">▸</span></summary>
-      <div class="histwrap" style="padding-top:12px"><table><thead><tr><th>#</th><th>Дата</th><th>Комбинация</th><th>Въпроси</th><th>Опити</th><th>Резултат</th></tr></thead><tbody id="hist"></tbody></table></div>
-    </details>
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
+      <div class="histwrap"><table><thead><tr><th>#</th><th>Дата</th><th>Комбинация</th><th>Въпроси</th><th>Опити</th><th>Резултат</th></tr></thead><tbody id="hist"></tbody></table></div>
+    </div>
     <details class="syncwrap" id="syncwrap">
       <summary><span class="eyebrow">Пренос между устройства</span><span class="tw">▸</span></summary>
     <div class="sync">
@@ -425,7 +425,6 @@ function renderStats(){
   const qav=QIDS.map(i=>QG.length?QG.reduce((s,x)=>s+(x.qc[i]||0),0)/QG.length:0);const qmx=Math.max(0.0001,...qav);
   $('qstats').innerHTML=QIDS.map((i,k)=>`<div class="qrow"><span class="ql">${QLAB[i]}</span><span class="qt"><i style="width:${qav[k]/qmx*100}%"></i></span><span class="qv">${QG.length?qav[k].toFixed(2):'–'}</span></div>`).join('');
   $('qstatsNote').textContent=QG.length?`По данни от ${QG.length} ${QG.length===1?'игра':'игри'}.`+(QG.length<G.length?` ${G.length-QG.length} по-стари игри не са включени, защото за тях не е записано кои въпроси са зададени.`:''):'Ще се попълни след първата завършена игра.';
-  $('histCount').textContent=G.length?'('+G.length+')':'';
   $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${i+1}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
 }
 let resetArmed=false;
