@@ -229,7 +229,6 @@ td.combo{font-family:var(--mono);white-space:nowrap}
   <section class="panel stats">
     <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
       <h2>Статистика</h2>
-      <div class="confirm" id="resetBox"><button class="btn ghost" id="resetBtn" style="padding:6px 14px;font-size:13px">Изчисти статистиката</button></div>
     </div>
     <div class="kpis" id="kpis"></div>
     <div>
@@ -244,7 +243,8 @@ td.combo{font-family:var(--mono);white-space:nowrap}
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
       <div class="histwrap"><table><thead><tr><th>#</th><th>Дата</th><th>Комбинация</th><th>Въпроси</th><th>Опити</th><th>Резултат</th></tr></thead><tbody id="hist"></tbody></table></div>
-      <div style="margin-top:10px"><button class="btn ghost" id="histMore" style="padding:6px 14px;font-size:13px" hidden></button></div>
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="histMore" style="padding:6px 14px;font-size:13px" hidden></button><span></span>
+  <div class="confirm" id="resetBox"><button class="btn ghost" id="resetBtn" style="padding:6px 14px;font-size:13px">Изчисти статистиката</button></div></div>
     </div>
     <details class="syncwrap" id="syncwrap">
       <summary><span class="eyebrow">Пренос между устройства</span><span class="tw">▸</span></summary>
