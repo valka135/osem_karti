@@ -154,6 +154,14 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .qrow .qt{height:8px;background:var(--felt);border-radius:4px;overflow:hidden}
 .qrow .qt i{display:block;height:100%;background:var(--brass);border-radius:4px}
 .qrow .qv{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.daily{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--brass);border-radius:14px;padding:12px 16px;background:linear-gradient(90deg,rgba(201,164,92,.12),transparent 70%)}
+.daily .dt{display:grid;gap:2px;min-width:0}
+.daily .dt b{font-family:var(--display);font-size:22px;font-weight:700;color:var(--brass-2);line-height:1.1}
+.daily .dt span{color:var(--muted);font-size:13px}
+.daily .cd{font-family:var(--mono);color:var(--fg)}
+.daily.on{background:rgba(201,164,92,.18)}
+.table.on{border-color:var(--brass)}
+.dtag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:#1a1209;background:var(--brass);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:1px}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 </head>
@@ -172,6 +180,11 @@ td.combo{font-family:var(--mono);white-space:nowrap}
       <div class="counter"><b id="cT">0</b><span>общо</span></div>
     </div>
   </header>
+
+  <div class="daily" id="dailyBar">
+    <div class="dt"><b>Daily Challenge</b><span id="dailyInfo"></span></div>
+    <button class="btn primary" id="dailyBtn"></button>
+  </div>
 
   <section class="table" aria-label="Маса">
     <div class="row" id="cards"></div>
@@ -266,9 +279,15 @@ let store={games:[],current:null};
 try{const raw=localStorage.getItem(KEY);if(raw)store=JSON.parse(raw);}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
 
-function deal(){
+const sofiaDate=(d=new Date())=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Sofia'}).format(d);
+function secsToMidnight(){const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Sofia',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return 86400-(+p.hour*3600+ +p.minute*60+ +p.second);}
+function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}let a=h>>>0;
+  return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const dm=t=>t.slice(8,10)+'.'+t.slice(5,7);
+store.dailyDone=store.dailyDone||{};
+function deal(rng=Math.random){
   const deck=[];for(const s of SUITS)for(let v=1;v<=13;v++)deck.push({v,s:s.k});
-  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
   const cards=deck.slice(0,8);
   for(const s of SUITS){
     const idx=cards.map((c,i)=>c.s===s.k?i:-1).filter(i=>i>=0);
@@ -277,6 +296,41 @@ function deal(){
   }
   return cards;
 }
+function startDaily(){
+  const t=sofiaDate(),c=store.current;
+  if(c&&c.daily===t)return;
+  if(store.dailyDone[t]){const r=store.dailyDone[t];flash(`Днешното предизвикателство вече е изиграно (${r.won?'позната':'предадена'}, ${r.q} въпроса, ${r.g} опита). Ново след 00:00.`,'bad');return;}
+  if(c&&!c.daily)store.free=c;
+  store.current=(store.dailyGame&&store.dailyGame.daily===t)?store.dailyGame:{cards:deal(seeded('osem-karti-'+t)),log:[],q:0,g:0,done:false,won:false,start:Date.now(),guess:Array(8).fill(''),daily:t};
+  store.dailyGame=null;flash('');save();render();renderNotes();
+}
+function leaveDaily(){
+  const c=store.current;if(!c||!c.daily)return;
+  store.dailyGame=(!c.done&&c.daily===sofiaDate())?c:null;
+  store.current=store.free||null;store.free=null;flash('');
+  if(!store.current)newGame();else{save();render();renderNotes();}
+}
+function renderDaily(){
+  const t=sofiaDate(),c=store.current,on=!!(c&&c.daily);
+  const left=secsToMidnight(),hh=String(Math.floor(left/3600)).padStart(2,'0'),mm=String(Math.floor(left%3600/60)).padStart(2,'0'),ss=String(left%60).padStart(2,'0');
+  const cd=`<span class="cd">${hh}:${mm}:${ss}</span>`;
+  const done=store.dailyDone[t],btn=$('dailyBtn');
+  $('dailyBar').classList.toggle('on',on);document.querySelector('.table').classList.toggle('on',on);
+  if(on){$('dailyInfo').innerHTML=`Играеш днешната комбинация за ${dm(t)} · еднаква за всички · ново след ${cd}`;btn.hidden=!!c.done;btn.textContent='Към свободна игра';btn.className='btn';}
+  else if(done){$('dailyInfo').innerHTML=`Днес: ${done.won?'позната':'предадена'} с ${done.q} въпроса и ${done.g} ${done.g===1?'опит':'опита'} · ново след ${cd}`;btn.hidden=true;}
+  else{const cont=store.dailyGame&&store.dailyGame.daily===t;$('dailyInfo').innerHTML=`Една и съща комбинация за всички днес, само по веднъж · ново след ${cd}`;btn.hidden=false;btn.className='btn primary';btn.textContent=cont?'Продължи Daily Challenge':'Играй Daily Challenge';}
+}
+$('dailyBtn').onclick=()=>{store.current&&store.current.daily?leaveDaily():startDaily();};
+function shareDaily(){
+  const c=store.current,txt=`Осемте карти · Daily ${dm(c.daily)}\n${c.won?'Познах':'Предадох се'} с ${c.q} въпроса и ${c.g} ${c.g===1?'опит':'опита'}\nhttps://osem-karti.vvturlakova.workers.dev/`;
+  const ok=()=>flash('Резултатът е копиран.','good'),fb=()=>flash(txt.replace(/\n/g,' · '),'');
+  try{navigator.clipboard.writeText(txt).then(ok,fb);}catch(e){fb();}
+}
+function checkDay(){const c=store.current;
+  if(c&&c.daily&&c.daily!==sofiaDate()){store.dailyGame=null;const wasDone=c.done;leaveDaily();if(!wasDone)flash('Денят свърши, затова Daily Challenge се затвори.','bad');}
+  if(store.dailyGame&&store.dailyGame.daily!==sofiaDate()){store.dailyGame=null;save();}
+}
+setInterval(()=>{checkDay();renderDaily();},1000);
 function newGame(){
   store.current={cards:deal(),log:[],q:0,g:0,done:false,won:false,start:Date.now(),guess:Array(8).fill('')};
   save();render();renderNotes();
@@ -384,8 +438,8 @@ function renderTable(){
     return `<div class="slot"><span class="pos">${i+1}</span>${html}</div>`;}).join('');
   gr.innerHTML=g.cards.map((_,i)=>`<div class="slot"><select id="g${i}" aria-label="Позиция ${i+1}" ${g.done?'disabled':''}><option value="">?</option>${RANKS.map((r,k)=>`<option value="${k+1}" ${+g.guess[i]===k+1?'selected':''}>${r}</option>`).join('')}</select></div>`).join('');
   gr.querySelectorAll('select').forEach((s,i)=>s.onchange=()=>{g.guess[i]=s.value;save();});
-  $('actBtns').innerHTML=g.done?'<button class="btn primary" id="newBtn">Нова игра</button>':'<button class="btn ghost" id="giveUp">Предавам се</button><button class="btn primary" id="guessBtn">Познай комбинацията</button>';
-  if(g.done)$('newBtn').onclick=()=>{flash('');newGame();};
+  $('actBtns').innerHTML=g.done?(g.daily?'<button class="btn" id="shareBtn">Копирай резултата</button><button class="btn primary" id="newBtn">Към свободна игра</button>':'<button class="btn primary" id="newBtn">Нова игра</button>'):'<button class="btn ghost" id="giveUp">Предавам се</button><button class="btn primary" id="guessBtn">Познай комбинацията</button>';
+  if(g.done){$('newBtn').onclick=()=>{flash('');g.daily?leaveDaily():newGame();};if(g.daily)$('shareBtn').onclick=shareDaily;}
   else{$('guessBtn').onclick=doGuess;$('giveUp').onclick=giveUp;}
 }
 let giveArmed=false;
@@ -403,7 +457,7 @@ function doGuess(){
 }
 function finish(won){
   const g=store.current;g.done=true;g.won=won;
-  store.games.push({d:Date.now(),cards:g.cards,q:g.q,g:g.g,won,qc:qcFromLog(g.log)});save();render();
+  store.games.push({d:Date.now(),cards:g.cards,q:g.q,g:g.g,won,qc:qcFromLog(g.log),...(g.daily?{daily:g.daily}:{})});if(g.daily)store.dailyDone[g.daily]={q:g.q,g:g.g,won};save();render();
 }
 
 function renderLog(){
@@ -431,7 +485,7 @@ function renderStats(){
   $('qstats').innerHTML=[['Сума','sum'],['Брой','cnt'],['Позиция','pos']].map(([t,p])=>`<div class="qcol"><h3>${t}</h3>${QIDS.filter(i=>i.startsWith(p)).map(row).join('')}</div>`).join('');
   $('qstatsNote').textContent=QG.length?`По данни от ${QG.length} ${QG.length===1?'игра':'игри'}.`+(QG.length<G.length?` ${G.length-QG.length} по-стари игри не са включени, защото за тях не е записано кои въпроси са зададени.`:''):'Ще се попълни след първата завършена игра.';
   const hm=$('histMore');hm.hidden=G.length<=10;hm.textContent=histAll?'Покажи само последните 10':`Покажи всички (${G.length})`;
-  $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().slice(0,histAll?G.length:10).map(({x,i})=>`<tr><td>${i+1}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
+  $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().slice(0,histAll?G.length:10).map(({x,i})=>`<tr><td>${i+1}${x.daily?'<span class="dtag">DAILY</span>':''}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
 }
 $('histMore').onclick=()=>{histAll=!histAll;renderStats();};
 let resetArmed=false;
@@ -480,9 +534,10 @@ $('mergeBtn').onclick=()=>{
   $('importCode').value='';m.className='msg good';m.textContent=added?`Добавени ${added} ${added===1?'игра':'игри'}.`:'Няма нови игри, всички вече са тук.';
 };
 
-function render(){renderTable();renderLog();renderStats();}
+function render(){renderDaily();renderTable();renderLog();renderStats();}
 (()=>{const c=store.current,L=store.games[store.games.length-1];if(c&&c.done&&L&&!L.qc&&JSON.stringify(L.cards)===JSON.stringify(c.cards)){L.qc=qcFromLog(c.log);save();}})();
 if(store.notesOpen)$('notes').open=true;
+checkDay();
 if(!store.current)newGame();else{render();renderNotes();}
 renderQ();
 </script>
