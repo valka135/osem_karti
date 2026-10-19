@@ -408,8 +408,8 @@ function finish(won){
 
 function renderLog(){
   const g=store.current;$('gameNo').textContent='Игра №'+(store.games.length+(g.done?0:1));
-  $('log').innerHTML=g.log.length?g.log.map((e,i)=>`<li class="${e.k==='g'?'guess':''}"><span class="n">${i+1}.</span><div><div class="qq">${e.q}</div><div class="aa" style="${e.a==='вярно'?'color:var(--ok)':''}">${e.a}</div></div></li>`).join(''):'<li><span></span><span class="empty">Още няма въпроси. Започни от панела вляво.</span></li>';
-  const l=document.querySelector('.log');l.scrollTop=l.scrollHeight;
+  $('log').innerHTML=g.log.length?g.log.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<li class="${e.k==='g'?'guess':''}"><span class="n">${i+1}.</span><div><div class="qq">${e.q}</div><div class="aa" style="${e.a==='вярно'?'color:var(--ok)':''}">${e.a}</div></div></li>`).join(''):'<li><span></span><span class="empty">Още няма въпроси. Започни от панела вляво.</span></li>';
+  const l=document.querySelector('.log');l.scrollTop=0;
   $('cQ').textContent=g.q;$('cG').textContent=g.g;$('cT').textContent=g.q+g.g;
 }
 
