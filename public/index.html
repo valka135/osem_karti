@@ -145,13 +145,6 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .sync p{margin:0;color:var(--muted);font-size:13px}
 .code{font-family:var(--mono);font-size:12px;background:var(--felt);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;min-height:76px;resize:vertical;word-break:break-all}
 .sync .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.suitstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-@media (max-width:560px){.suitstats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.st{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:2px;background:var(--felt)}
-.st .sh{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
-.st .sym{font-size:22px;line-height:1}
-.st b{font-family:var(--mono);font-size:24px;font-variant-numeric:tabular-nums}
-.st span{font-size:12px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 </head>
@@ -220,10 +213,6 @@ td.combo{font-family:var(--mono);white-space:nowrap}
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Колко пъти се е падала всяка стойност</div>
       <div class="freq" id="freq"></div>
-    </div>
-    <div>
-      <div class="eyebrow" style="margin-bottom:8px">Колко карти от всяка боя има средно в игра</div>
-      <div class="suitstats" id="suitstats"></div>
     </div>
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
@@ -417,9 +406,6 @@ function renderStats(){
   ].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join('');
   const f=Array(13).fill(0);G.forEach(x=>x.cards.forEach(c=>f[c.v-1]++));const mx=Math.max(1,...f);
   $('freq').innerHTML=f.map((n,i)=>`<div class="bar"><i style="height:${n/mx*100}%"></i><em>${n}</em><small>${RANKS[i]}</small></div>`).join('');
-  $('suitstats').innerHTML=SUITS.map(su=>{const per=G.map(x=>x.cards.filter(c=>c.s===su.k).length);
-    const av=per.length?(per.reduce((a,b)=>a+b,0)/per.length).toFixed(2):'–';
-    return `<div class="st"><div class="sh"><span style="color:var(--fg);font-size:14px">${su.n}</span><span class="sym ${su.red?'red-t':''}">${su.s}</span></div><b>${av}</b><span>${per.length?`най-много ${Math.max(...per)} · без нито една в ${per.filter(n=>n===0).length} ${per.filter(n=>n===0).length===1?'игра':'игри'}`:'още няма игри'}</span></div>`;}).join('');
   $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${i+1}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
 }
 let resetArmed=false;
