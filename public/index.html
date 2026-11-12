@@ -162,6 +162,12 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 .daily.on{background:rgba(201,164,92,.18)}
 .table.on{border-color:var(--brass)}
 .dtag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:#1a1209;background:var(--brass);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+.hright{display:grid;justify-items:end;gap:12px}
+@media (max-width:700px){.hright{justify-items:start}}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lang button{font:inherit;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.06em;padding:5px 12px;background:none;border:0;color:var(--muted);cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--brass);color:#1a1209}
+.lang button:focus-visible{outline:2px solid var(--brass-2);outline-offset:-2px}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 </head>
@@ -170,14 +176,20 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 <div class="wrap">
   <header>
     <div>
-      <div class="eyebrow">Вдъхновено от финала на The Devil's Plan 2</div>
-      <h1>Осемте <em>карти</em></h1>
-      <p class="sub">Компютърът е изтеглил 8 карти. Картите от една боя стоят във възходящ ред (A=1, J=11, Q=12, K=13). Задавай въпроси и познай стойностите.</p>
+      <div class="eyebrow" data-i="eyebrow"></div>
+      <h1 id="h1"></h1>
+      <p class="sub" data-i="sub"></p>
     </div>
-    <div class="counters">
-      <div class="counter"><b id="cQ">0</b><span>въпроса</span></div>
-      <div class="counter"><b id="cG">0</b><span>опита</span></div>
-      <div class="counter"><b id="cT">0</b><span>общо</span></div>
+    <div class="hright">
+      <div class="lang" role="group" aria-label="Език / Language">
+        <button type="button" id="langBg" data-lang="bg">БГ</button>
+        <button type="button" id="langEn" data-lang="en">EN</button>
+      </div>
+      <div class="counters">
+        <div class="counter"><b id="cQ">0</b><span data-i="cQ"></span></div>
+        <div class="counter"><b id="cG">0</b><span data-i="cG"></span></div>
+        <div class="counter"><b id="cT">0</b><span data-i="cT"></span></div>
+      </div>
     </div>
   </header>
 
@@ -186,80 +198,77 @@ td.combo{font-family:var(--mono);white-space:nowrap}
     <button class="btn primary" id="dailyBtn"></button>
   </div>
 
-  <section class="table" aria-label="Маса">
+  <section class="table" data-ia="table">
     <div class="row" id="cards"></div>
     <div class="row" id="guessRow"></div>
     <div class="actions">
       <div class="msg" id="msg" role="status"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap" id="actBtns">
-        <button class="btn ghost" id="giveUp">Предавам се</button>
-        <button class="btn primary" id="guessBtn">Познай комбинацията</button>
-      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="actBtns"></div>
     </div>
   </section>
 
   <details class="notes" id="notes">
-    <summary><h2>Бележки</h2><span class="eyebrow">Само за теб · пазят се за текущата игра <span class="tw">▸</span></span></summary>
+    <summary><h2 data-i="notes"></h2><span class="eyebrow"><span data-i="notesSub"></span> <span class="tw">▸</span></span></summary>
     <div class="notes-body">
       <div class="nslots" id="nslots"></div>
-      <label for="freeNote" class="eyebrow">Свободни бележки</label>
-      <textarea class="free" id="freeNote" placeholder="Напр. сума 3 = 25 → картинките са A, Q и Q или J, J и 2…"></textarea>
-      <div class="nfoot"><span class="pos">Бележките се изчистват при нова игра.</span><button class="btn ghost" id="clearNotes" style="padding:6px 14px;font-size:13px">Изчисти бележките</button></div>
+      <label for="freeNote" class="eyebrow" data-i="freeNotes"></label>
+      <textarea class="free" id="freeNote" data-ip="freePh"></textarea>
+      <div class="nfoot"><span class="pos" data-i="notesFoot"></span><button class="btn ghost" id="clearNotes" style="padding:6px 14px;font-size:13px"></button></div>
     </div>
   </details>
 
   <div class="main">
     <section class="panel">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap">
-        <h2>Въпроси</h2><span class="eyebrow">Всеки въпрос може да се повтаря</span>
+        <h2 data-i="questions"></h2><span class="eyebrow" data-i="repeatable"></span>
       </div>
       <div class="tabs" role="tablist">
-        <button class="tab" role="tab" data-t="sum" aria-selected="true">Сума</button>
-        <button class="tab" role="tab" data-t="cnt" aria-selected="false">Брой</button>
-        <button class="tab" role="tab" data-t="pos" aria-selected="false">Позиция</button>
+        <button class="tab" role="tab" data-t="sum" aria-selected="true" data-i="catsum"></button>
+        <button class="tab" role="tab" data-t="cnt" aria-selected="false" data-i="catcnt"></button>
+        <button class="tab" role="tab" data-t="pos" aria-selected="false" data-i="catpos"></button>
       </div>
       <div class="qlist" id="qlist"></div>
     </section>
     <section class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Дневник</h2><span class="eyebrow" id="gameNo"></span></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 data-i="log"></h2><span class="eyebrow" id="gameNo"></span></div>
       <div class="log"><ol id="log"></ol></div>
     </section>
   </div>
 
   <section class="panel stats">
     <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
-      <h2>Статистика</h2>
+      <h2 data-i="stats"></h2>
     </div>
     <div class="kpis" id="kpis"></div>
     <div>
-      <div class="eyebrow" style="margin-bottom:8px">Колко пъти се е падала всяка стойност</div>
+      <div class="eyebrow" style="margin-bottom:8px" data-i="freqTitle"></div>
       <div class="freq" id="freq"></div>
     </div>
     <div>
-      <div class="eyebrow" style="margin-bottom:8px">Колко пъти задаваш всеки въпрос средно в игра</div>
+      <div class="eyebrow" style="margin-bottom:8px" data-i="qstatsTitle"></div>
       <div class="qstats" id="qstats"></div>
       <p class="pos" id="qstatsNote" style="margin:8px 0 0"></p>
     </div>
     <div>
-      <div class="eyebrow" style="margin-bottom:8px">Изиграни комбинации</div>
-      <div class="histwrap"><table><thead><tr><th>#</th><th>Дата</th><th>Комбинация</th><th>Въпроси</th><th>Опити</th><th>Резултат</th></tr></thead><tbody id="hist"></tbody></table></div>
+      <div class="eyebrow" style="margin-bottom:8px" data-i="histTitle"></div>
+      <div class="histwrap"><table><thead><tr><th>#</th><th data-i="thDate"></th><th data-i="thCombo"></th><th data-i="thQ"></th><th data-i="thG"></th><th data-i="thRes"></th></tr></thead><tbody id="hist"></tbody></table></div>
       <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="histMore" style="padding:6px 14px;font-size:13px" hidden></button><span></span>
-  <div class="confirm" id="resetBox"><button class="btn ghost" id="resetBtn" style="padding:6px 14px;font-size:13px">Изчисти статистиката</button></div></div>
+        <div class="confirm" id="resetBox"><button class="btn ghost" id="resetBtn" style="padding:6px 14px;font-size:13px"></button></div></div>
     </div>
     <details class="syncwrap" id="syncwrap">
-      <summary><span class="eyebrow">Пренос между устройства</span><span class="tw">▸</span></summary>
+      <summary><span class="eyebrow" data-i="syncTitle"></span><span class="tw">▸</span></summary>
     <div class="sync">
       <div>
-        <div class="eyebrow">Код на това устройство</div>
-        <p>Копирай кода и го постави на другото устройство.</p>
-        <textarea class="code" id="exportCode" readonly aria-label="Код за пренос"></textarea>
-        <div class="row2"><button class="btn" id="copyCode" style="padding:6px 14px;font-size:13px">Копирай кода</button></div>
+        <div class="eyebrow" data-i="codeHere"></div>
+        <p data-i="codeHereSub"></p>
+        <textarea class="code" id="exportCode" readonly data-ia="codeAria"></textarea>
+        <div class="row2"><button class="btn" id="copyCode" style="padding:6px 14px;font-size:13px"></button></div>
       </div>
       <div>
-        <div class="eyebrow">Обедини с код от друго устройство</div>
-        <p>Игрите се добавят към тукашните. Повтарящи се игри не се броят два пъти.</p>
-        <textarea class="code" id="importCode" aria-label="Постави код" placeholder="Постави кода тук…"></textarea>
-        <div class="row2"><button class="btn primary" id="mergeBtn" style="padding:6px 14px;font-size:13px">Обедини</button><span class="msg" id="syncMsg" role="status"></span></div>
+        <div class="eyebrow" data-i="mergeTitle"></div>
+        <p data-i="mergeSub"></p>
+        <textarea class="code" id="importCode" data-ia="pasteAria" data-ip="pastePh"></textarea>
+        <div class="row2"><button class="btn primary" id="mergeBtn" style="padding:6px 14px;font-size:13px" data-i="merge"></button><span class="msg" id="syncMsg" role="status"></span></div>
       </div>
     </div>
     </details>
@@ -267,8 +276,110 @@ td.combo{font-family:var(--mono);white-space:nowrap}
 </div>
 
 <script>
+/* ---------- language ---------- */
+const pl=(n,one,many)=>n===1?one:many;
+const L={
+bg:{
+  htmlTitle:'Осемте карти', h1:'Осемте <em>карти</em>',
+  eyebrow:"Вдъхновено от финала на The Devil's Plan 2",
+  sub:'Компютърът е изтеглил 8 карти. Картите от една боя стоят във възходящ ред (A=1, J=11, Q=12, K=13). Задавай въпроси и познай стойностите.',
+  cQ:'въпроса', cG:'опита', cT:'общо', table:'Маса',
+  notes:'Бележки', notesSub:'Само за теб · пазят се за текущата игра', freeNotes:'Свободни бележки',
+  freePh:'Напр. сума 3 = 25 → картинките са A, Q и Q или A, J и K…',
+  notesFoot:'Бележките се изчистват при нова игра.', clearNotes:'Изчисти бележките', clearNotesArm:'Натисни пак, за да изчистиш',
+  notePh:'бележка…', noteAria:i=>`Бележка за позиция ${i}`, posAria:i=>`Позиция ${i}`,
+  questions:'Въпроси', repeatable:'Всеки въпрос може да се повтаря', catsum:'Сума', catcnt:'Брой', catpos:'Позиция',
+  log:'Дневник', stats:'Статистика',
+  freqTitle:'Колко пъти се е падала всяка стойност', qstatsTitle:'Колко пъти задаваш всеки въпрос средно в игра',
+  histTitle:'Изиграни комбинации', thDate:'Дата', thCombo:'Комбинация', thQ:'Въпроси', thG:'Опити', thRes:'Резултат',
+  syncTitle:'Пренос между устройства', codeHere:'Код на това устройство', codeHereSub:'Копирай кода и го постави на другото устройство.',
+  codeAria:'Код за пренос', copyCode:'Копирай кода', copied:'Копирано',
+  mergeTitle:'Обедини с код от друго устройство', mergeSub:'Игрите се добавят към тукашните. Повтарящи се игри не се броят два пъти.',
+  pasteAria:'Постави код', pastePh:'Постави кода тук…', merge:'Обедини',
+  errPrefix:'Кодът трябва да започва с OK1-. Копирай го целия от другото устройство.', errBroken:'Кодът е повреден.',
+  errRead:'Кодът не може да се прочете. Провери дали е копиран целият.',
+  added:n=>`Добавени ${n} ${pl(n,'игра','игри')}.`, noneAdded:'Няма нови игри, всички вече са тук.',
+  suits:{C:'спатия',D:'каро',H:'купа',S:'пика'},
+  qlab:{sum1:'Сума 1',sum2:'Сума 2',sum3:'Сума 3',sum4:'Сума 4',cnt1:'Брой 1',cnt2:'Брой 2',cnt3:'Брой 3',pos1:'Позиция 1',pos2:'Позиция 2',pos3:'Позиция 3',pos4:'Позиция 4'},
+  qtext:{sum1:'Избери 3 позиции. Какъв е сборът на картите там?',sum2:'Избери боя. Какъв е сборът на картите от нея?',sum3:'Какъв е сборът на картинките (A, J, Q, K)?',sum4:'Какъв е сборът на числата (2–10)?',
+    cnt1:'Колко картинки има общо (A, J, Q, K)?',cnt2:'Колко числа има общо (2–10)?',cnt3:'Избери стойност. Колко такива карти има?',
+    pos1:'Избери боя. На кои позиции са картите от нея?',pos2:'На кои позиции са картите с еднаква стойност?',pos3:'На кои позиции са картите с последователни стойности?',pos4:'На коя позиция е най-голямата или най-ниската стойност?'},
+  logq:{sum1:a=>`сбор на позиции ${a.map(i=>i+1).join(', ')}`,sum2:(a,S)=>`сбор на ${S.n} ${S.s}`,sum3:()=>'сбор на картинките (A, J, Q, K)',sum4:()=>'сбор на числата (2–10)',
+    cnt1:()=>'колко картинки (A, J, Q, K)',cnt2:()=>'колко числа (2–10)',cnt3:a=>`колко карти ${lab(a)}`,
+    pos1:(a,S)=>`къде е ${S.n} ${S.s}`,pos2:()=>'карти с еднаква стойност',pos3:()=>'карти с последователни стойности',pos4:a=>`къде е ${a==='max'?'най-голямата':'най-ниската'} стойност`},
+  none:'няма', max:'Най-голяма', min:'Най-ниска', ask:'Питай',
+  pick3:'Избери точно 3 позиции.', pickSuit:'Избери боя.', pickRank:'Избери стойност.', pickMM:'Избери най-голяма или най-ниска.',
+  dup:a=>`Това е същият въпрос като последния, затова не се брои. Отговорът е ${a}.`,
+  giveUp:'Предавам се', guess:'Познай комбинацията', newGame:'Нова игра', share:'Копирай резултата', toFree:'Към свободна игра',
+  giveArm:'Натисни „Предавам се“ още веднъж, за да видиш картите.', reveal:'Ето каква беше комбинацията.',
+  fillAll:'Попълни стойност за всичките 8 позиции.', guessPrefix:'Опит', right:'вярно', wrong:'грешно',
+  won:(q,g)=>`Позна! ${q} ${pl(q,'въпрос','въпроса')} и ${g} ${pl(g,'опит','опита')}.`, notRight:'Не е вярно. Продължавай.',
+  gameNo:n=>'Игра №'+n, emptyLog:'Още няма въпроси. Започни от панела вляво.',
+  kpi:['изиграни игри','познати','успеваемост','ср. въпроси при успех','ср. опити при успех','най-добър резултат (общо ходове)'],
+  qNote:(n,old)=>`По данни от ${n} ${pl(n,'игра','игри')}.`+(old?` ${old} по-стари игри не са включени, защото за тях не е записано кои въпроси са зададени.`:''),
+  qNoteEmpty:'Ще се попълни след първата завършена игра.',
+  showAll:n=>`Покажи всички (${n})`, showLast:'Покажи само последните 10', histEmpty:'Тук ще се появят комбинациите от завършените игри.',
+  solved:'позната', gaveUp:'предадена', reset:'Изчисти статистиката', resetArm:'Сигурна ли си? Натисни пак', locale:'bg-BG',
+  dOn:(d,cd)=>`Играеш днешната комбинация за ${d} · еднаква за всички · ново след ${cd}`,
+  dDone:(r,cd)=>`Днес: ${r.won?'позната':'предадена'} с ${r.q} ${pl(r.q,'въпрос','въпроса')} и ${r.g} ${pl(r.g,'опит','опита')} · ново след ${cd}`,
+  dIdle:cd=>`Една и съща комбинация за всички днес, само по веднъж · ново след ${cd}`,
+  dPlay:'Играй Daily Challenge', dCont:'Продължи Daily Challenge',
+  dPlayed:r=>`Днешното предизвикателство вече е изиграно (${r.won?'позната':'предадена'}, ${r.q} ${pl(r.q,'въпрос','въпроса')}, ${r.g} ${pl(r.g,'опит','опита')}). Ново след 00:00.`,
+  dOver:'Денят свърши, затова Daily Challenge се затвори.', copiedRes:'Резултатът е копиран.',
+  shareTxt:(d,c)=>`Осемте карти · Daily ${d}\n${c.won?'Познах':'Предадох се'} с ${c.q} ${pl(c.q,'въпрос','въпроса')} и ${c.g} ${pl(c.g,'опит','опита')}`
+},
+en:{
+  htmlTitle:'Eight Cards', h1:'Eight <em>Cards</em>',
+  eyebrow:"Inspired by the finale of The Devil's Plan 2",
+  sub:'The computer has drawn 8 cards. Cards of the same suit sit in ascending order (A=1, J=11, Q=12, K=13). Ask questions and guess the values.',
+  cQ:'questions', cG:'guesses', cT:'total', table:'Table',
+  notes:'Notes', notesSub:'Only for you · kept for the current game', freeNotes:'Free notes',
+  freePh:'E.g. sum 3 = 25 → the picture cards are A, Q and Q, or A, J and K…',
+  notesFoot:'Notes are cleared when a new game starts.', clearNotes:'Clear notes', clearNotesArm:'Press again to clear',
+  notePh:'note…', noteAria:i=>`Note for position ${i}`, posAria:i=>`Position ${i}`,
+  questions:'Questions', repeatable:'Any question can be asked again', catsum:'Sum', catcnt:'Count', catpos:'Position',
+  log:'Log', stats:'Statistics',
+  freqTitle:'How often each value came up', qstatsTitle:'How many times you ask each question per game, on average',
+  histTitle:'Played combinations', thDate:'Date', thCombo:'Combination', thQ:'Questions', thG:'Guesses', thRes:'Result',
+  syncTitle:'Transfer between devices', codeHere:'Code on this device', codeHereSub:'Copy the code and paste it on the other device.',
+  codeAria:'Transfer code', copyCode:'Copy code', copied:'Copied',
+  mergeTitle:'Merge with a code from another device', mergeSub:'Games are added to the ones here. Repeated games are not counted twice.',
+  pasteAria:'Paste code', pastePh:'Paste the code here…', merge:'Merge',
+  errPrefix:'The code must start with OK1-. Copy the whole code from the other device.', errBroken:'The code is damaged.',
+  errRead:'The code cannot be read. Check that you copied all of it.',
+  added:n=>`Added ${n} ${pl(n,'game','games')}.`, noneAdded:'No new games, they are all here already.',
+  suits:{C:'clubs',D:'diamonds',H:'hearts',S:'spades'},
+  qlab:{sum1:'Sum 1',sum2:'Sum 2',sum3:'Sum 3',sum4:'Sum 4',cnt1:'Count 1',cnt2:'Count 2',cnt3:'Count 3',pos1:'Position 1',pos2:'Position 2',pos3:'Position 3',pos4:'Position 4'},
+  qtext:{sum1:'Pick 3 positions. What is the sum of those cards?',sum2:'Pick a suit. What is the sum of its cards?',sum3:'What is the sum of the picture cards (A, J, Q, K)?',sum4:'What is the sum of the number cards (2–10)?',
+    cnt1:'How many picture cards are there (A, J, Q, K)?',cnt2:'How many number cards are there (2–10)?',cnt3:'Pick a value. How many of those cards are there?',
+    pos1:'Pick a suit. Which positions hold its cards?',pos2:'Which positions hold cards of equal value?',pos3:'Which positions hold cards with consecutive values?',pos4:'Which position holds the highest or the lowest value?'},
+  logq:{sum1:a=>`sum of positions ${a.map(i=>i+1).join(', ')}`,sum2:(a,S)=>`sum of ${S.n} ${S.s}`,sum3:()=>'sum of picture cards (A, J, Q, K)',sum4:()=>'sum of number cards (2–10)',
+    cnt1:()=>'how many picture cards (A, J, Q, K)',cnt2:()=>'how many number cards (2–10)',cnt3:a=>`how many cards ${lab(a)}`,
+    pos1:(a,S)=>`where are the ${S.n} ${S.s}`,pos2:()=>'cards of equal value',pos3:()=>'cards with consecutive values',pos4:a=>`where is the ${a==='max'?'highest':'lowest'} value`},
+  none:'none', max:'Highest', min:'Lowest', ask:'Ask',
+  pick3:'Pick exactly 3 positions.', pickSuit:'Pick a suit.', pickRank:'Pick a value.', pickMM:'Pick highest or lowest.',
+  dup:a=>`That is the same question as the last one, so it does not count. The answer is ${a}.`,
+  giveUp:'Give up', guess:'Guess the combination', newGame:'New game', share:'Copy result', toFree:'Back to free play',
+  giveArm:'Press “Give up” once more to reveal the cards.', reveal:'Here is the combination.',
+  fillAll:'Pick a value for all 8 positions.', guessPrefix:'Guess', right:'correct', wrong:'wrong',
+  won:(q,g)=>`Solved! ${q} ${pl(q,'question','questions')} and ${g} ${pl(g,'guess','guesses')}.`, notRight:'Not right. Keep going.',
+  gameNo:n=>'Game #'+n, emptyLog:'No questions yet. Start from the panel on the left.',
+  kpi:['games played','solved','success rate','avg questions when solved','avg guesses when solved','best result (total moves)'],
+  qNote:(n,old)=>`Based on ${n} ${pl(n,'game','games')}.`+(old?` ${old} older ${pl(old,'game is left out because its questions were','games are left out because their questions were')} not recorded.`:''),
+  qNoteEmpty:'Fills in after the first finished game.',
+  showAll:n=>`Show all (${n})`, showLast:'Show only the last 10', histEmpty:'Combinations from finished games will appear here.',
+  solved:'solved', gaveUp:'gave up', reset:'Clear statistics', resetArm:'Are you sure? Press again', locale:'en-GB',
+  dOn:(d,cd)=>`You are playing today's combination for ${d} · same for everyone · next one in ${cd}`,
+  dDone:(r,cd)=>`Today: ${r.won?'solved':'gave up'} with ${r.q} ${pl(r.q,'question','questions')} and ${r.g} ${pl(r.g,'guess','guesses')} · next one in ${cd}`,
+  dIdle:cd=>`The same combination for everyone today, one try only · next one in ${cd}`,
+  dPlay:'Play Daily Challenge', dCont:'Continue Daily Challenge',
+  dPlayed:r=>`Today's challenge is already played (${r.won?'solved':'gave up'}, ${r.q} ${pl(r.q,'question','questions')}, ${r.g} ${pl(r.g,'guess','guesses')}). A new one comes at midnight Bulgarian time.`,
+  dOver:'The day ended, so the Daily Challenge closed.', copiedRes:'Result copied.',
+  shareTxt:(d,c)=>`Eight Cards · Daily ${d}\n${c.won?'Solved':'Gave up'} with ${c.q} ${pl(c.q,'question','questions')} and ${c.g} ${pl(c.g,'guess','guesses')}`
+}};
+
 const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-const SUITS=[{k:'C',n:'спатия',g:'спатия',s:'♣',red:false},{k:'D',n:'каро',g:'каро',s:'♦',red:true},{k:'H',n:'купа',g:'купа',s:'♥',red:true},{k:'S',n:'пика',g:'пика',s:'♠',red:false}];
+const SUITS=[{k:'C',s:'♣',red:false},{k:'D',s:'♦',red:true},{k:'H',s:'♥',red:true},{k:'S',s:'♠',red:false}];
 const SU=Object.fromEntries(SUITS.map(s=>[s.k,s]));
 const lab=v=>RANKS[v-1];
 const isPic=v=>v===1||v>=11;
@@ -279,6 +390,21 @@ let store={games:[],current:null};
 try{const raw=localStorage.getItem(KEY);if(raw)store=JSON.parse(raw);}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
 
+if(!store.lang){const nl=(navigator.language||'').toLowerCase();store.lang=(store.current||(store.games&&store.games.length)||nl.startsWith('bg'))?'bg':'en';}
+let T=L[store.lang]||L.bg;
+const sn=k=>T.suits[k];
+function applyStatic(){
+  document.documentElement.lang=store.lang;document.title=T.htmlTitle;$('h1').innerHTML=T.h1;
+  document.querySelectorAll('[data-i]').forEach(e=>{e.textContent=T[e.dataset.i];});
+  document.querySelectorAll('[data-ip]').forEach(e=>{e.placeholder=T[e.dataset.ip];});
+  document.querySelectorAll('[data-ia]').forEach(e=>{e.setAttribute('aria-label',T[e.dataset.ia]);});
+  $('clearNotes').textContent=T.clearNotes;$('resetBtn').textContent=T.reset;$('copyCode').textContent=T.copyCode;
+  $('langBg').setAttribute('aria-pressed',store.lang==='bg');$('langEn').setAttribute('aria-pressed',store.lang==='en');
+}
+function setLang(l){if(!L[l]||l===store.lang)return;store.lang=l;T=L[l];save();flash('');$('syncMsg').textContent='';applyStatic();render();renderQ();renderNotes();}
+$('langBg').onclick=()=>setLang('bg');$('langEn').onclick=()=>setLang('en');
+
+/* ---------- daily ---------- */
 const sofiaDate=(d=new Date())=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Sofia'}).format(d);
 function secsToMidnight(){const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Sofia',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return 86400-(+p.hour*3600+ +p.minute*60+ +p.second);}
 function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}let a=h>>>0;
@@ -299,7 +425,7 @@ function deal(rng=Math.random){
 function startDaily(){
   const t=sofiaDate(),c=store.current;
   if(c&&c.daily===t)return;
-  if(store.dailyDone[t]){const r=store.dailyDone[t];flash(`Днешното предизвикателство вече е изиграно (${r.won?'позната':'предадена'}, ${r.q} въпроса, ${r.g} опита). Ново след 00:00.`,'bad');return;}
+  if(store.dailyDone[t]){flash(T.dPlayed(store.dailyDone[t]),'bad');return;}
   if(c&&!c.daily)store.free=c;
   store.current=(store.dailyGame&&store.dailyGame.daily===t)?store.dailyGame:{cards:deal(seeded('osem-karti-'+t)),log:[],q:0,g:0,done:false,won:false,start:Date.now(),guess:Array(8).fill(''),daily:t};
   store.dailyGame=null;flash('');save();render();renderNotes();
@@ -316,18 +442,18 @@ function renderDaily(){
   const cd=`<span class="cd">${hh}:${mm}:${ss}</span>`;
   const done=store.dailyDone[t],btn=$('dailyBtn');
   $('dailyBar').classList.toggle('on',on);document.querySelector('.table').classList.toggle('on',on);
-  if(on){$('dailyInfo').innerHTML=`Играеш днешната комбинация за ${dm(t)} · еднаква за всички · ново след ${cd}`;btn.hidden=!!c.done;btn.textContent='Към свободна игра';btn.className='btn';}
-  else if(done){$('dailyInfo').innerHTML=`Днес: ${done.won?'позната':'предадена'} с ${done.q} въпроса и ${done.g} ${done.g===1?'опит':'опита'} · ново след ${cd}`;btn.hidden=true;}
-  else{const cont=store.dailyGame&&store.dailyGame.daily===t;$('dailyInfo').innerHTML=`Една и съща комбинация за всички днес, само по веднъж · ново след ${cd}`;btn.hidden=false;btn.className='btn primary';btn.textContent=cont?'Продължи Daily Challenge':'Играй Daily Challenge';}
+  if(on){$('dailyInfo').innerHTML=T.dOn(dm(t),cd);btn.hidden=!!c.done;btn.textContent=T.toFree;btn.className='btn';}
+  else if(done){$('dailyInfo').innerHTML=T.dDone(done,cd);btn.hidden=true;}
+  else{const cont=store.dailyGame&&store.dailyGame.daily===t;$('dailyInfo').innerHTML=T.dIdle(cd);btn.hidden=false;btn.className='btn primary';btn.textContent=cont?T.dCont:T.dPlay;}
 }
 $('dailyBtn').onclick=()=>{store.current&&store.current.daily?leaveDaily():startDaily();};
 function shareDaily(){
-  const c=store.current,txt=`Осемте карти · Daily ${dm(c.daily)}\n${c.won?'Познах':'Предадох се'} с ${c.q} въпроса и ${c.g} ${c.g===1?'опит':'опита'}\nhttps://osem-karti.vvturlakova.workers.dev/`;
-  const ok=()=>flash('Резултатът е копиран.','good'),fb=()=>flash(txt.replace(/\n/g,' · '),'');
+  const c=store.current,txt=T.shareTxt(dm(c.daily),c)+'\nhttps://osem-karti.vvturlakova.workers.dev/';
+  const ok=()=>flash(T.copiedRes,'good'),fb=()=>flash(txt.replace(/\n/g,' · '),'');
   try{navigator.clipboard.writeText(txt).then(ok,fb);}catch(e){fb();}
 }
 function checkDay(){const c=store.current;
-  if(c&&c.daily&&c.daily!==sofiaDate()){store.dailyGame=null;const wasDone=c.done;leaveDaily();if(!wasDone)flash('Денят свърши, затова Daily Challenge се затвори.','bad');}
+  if(c&&c.daily&&c.daily!==sofiaDate()){store.dailyGame=null;const wasDone=c.done;leaveDaily();if(!wasDone)flash(T.dOver,'bad');}
   if(store.dailyGame&&store.dailyGame.daily!==sofiaDate()){store.dailyGame=null;save();}
 }
 setInterval(()=>{checkDay();renderDaily();},1000);
@@ -337,76 +463,58 @@ function newGame(){
 }
 
 /* ---------- answers ---------- */
-const posList=a=>a.length?a.map(i=>i+1).join(', '):'няма';
-function groupsText(gs){return gs.length?gs.map(g=>'['+g.map(i=>i+1).join(', ')+']').join('  '):'няма'}
+/* log entries store the question type, its argument and the raw result, so they can be shown in either language */
+const QIDS=['sum1','sum2','sum3','sum4','cnt1','cnt2','cnt3','pos1','pos2','pos3','pos4'];
 function answer(type,arg){
   const c=store.current.cards;const V=c.map(x=>x.v);
   switch(type){
-    case 'sum1':return {q:`Сума 1 · сбор на позиции ${arg.map(i=>i+1).join(', ')}`,a:String(arg.reduce((s,i)=>s+V[i],0))};
-    case 'sum2':return {q:`Сума 2 · сбор на ${SU[arg].n} ${SU[arg].s}`,a:String(c.filter(x=>x.s===arg).reduce((s,x)=>s+x.v,0))};
-    case 'sum3':return {q:'Сума 3 · сбор на картинките (A, J, Q, K)',a:String(V.filter(isPic).reduce((a,b)=>a+b,0))};
-    case 'sum4':return {q:'Сума 4 · сбор на числата (2–10)',a:String(V.filter(v=>!isPic(v)).reduce((a,b)=>a+b,0))};
-    case 'cnt1':return {q:'Брой 1 · колко картинки (A, J, Q, K)',a:String(V.filter(isPic).length)};
-    case 'cnt2':return {q:'Брой 2 · колко числа (2–10)',a:String(V.filter(v=>!isPic(v)).length)};
-    case 'cnt3':return {q:`Брой 3 · колко карти ${lab(arg)}`,a:String(V.filter(v=>v===arg).length)};
-    case 'pos1':return {q:`Позиция 1 · къде е ${SU[arg].n} ${SU[arg].s}`,a:posList(c.map((x,i)=>x.s===arg?i:-1).filter(i=>i>=0))};
-    case 'pos2':{
-      const m={};V.forEach((v,i)=>(m[v]=m[v]||[]).push(i));
-      const gs=Object.values(m).filter(g=>g.length>1).sort((a,b)=>a[0]-b[0]);
-      return {q:'Позиция 2 · карти с еднаква стойност',a:groupsText(gs)};
-    }
+    case 'sum1':return arg.reduce((s,i)=>s+V[i],0);
+    case 'sum2':return c.filter(x=>x.s===arg).reduce((s,x)=>s+x.v,0);
+    case 'sum3':return V.filter(isPic).reduce((a,b)=>a+b,0);
+    case 'sum4':return V.filter(v=>!isPic(v)).reduce((a,b)=>a+b,0);
+    case 'cnt1':return V.filter(isPic).length;
+    case 'cnt2':return V.filter(v=>!isPic(v)).length;
+    case 'cnt3':return V.filter(v=>v===arg).length;
+    case 'pos1':return c.map((x,i)=>x.s===arg?i:-1).filter(i=>i>=0);
+    case 'pos2':{const m={};V.forEach((v,i)=>(m[v]=m[v]||[]).push(i));return Object.values(m).filter(g=>g.length>1).sort((a,b)=>a[0]-b[0]);}
     case 'pos3':{
       const uniq=[...new Set(V)].sort((a,b)=>a-b);const runs=[];let cur=[uniq[0]];
       for(let k=1;k<uniq.length;k++){if(uniq[k]===uniq[k-1]+1)cur.push(uniq[k]);else{runs.push(cur);cur=[uniq[k]];}}runs.push(cur);
-      const gs=runs.filter(r=>r.length>1).map(r=>V.map((v,i)=>r.includes(v)?i:-1).filter(i=>i>=0)).sort((a,b)=>a[0]-b[0]);
-      return {q:'Позиция 3 · карти с последователни стойности',a:groupsText(gs)};
+      return runs.filter(r=>r.length>1).map(r=>V.map((v,i)=>r.includes(v)?i:-1).filter(i=>i>=0)).sort((a,b)=>a[0]-b[0]);
     }
-    case 'pos4':{
-      const t=arg==='max'?Math.max(...V):Math.min(...V);
-      return {q:`Позиция 4 · къде е ${arg==='max'?'най-голямата':'най-ниската'} стойност`,a:posList(V.map((v,i)=>v===t?i:-1).filter(i=>i>=0))};
-    }
+    case 'pos4':{const t=arg==='max'?Math.max(...V):Math.min(...V);return V.map((v,i)=>v===t?i:-1).filter(i=>i>=0);}
   }
 }
-const QIDS=['sum1','sum2','sum3','sum4','cnt1','cnt2','cnt3','pos1','pos2','pos3','pos4'];
-const QLAB={sum1:'Сума 1',sum2:'Сума 2',sum3:'Сума 3',sum4:'Сума 4',cnt1:'Брой 1',cnt2:'Брой 2',cnt3:'Брой 3',pos1:'Позиция 1',pos2:'Позиция 2',pos3:'Позиция 3',pos4:'Позиция 4'};
-function qcFromLog(log){const qc={};for(const e of log){if(e.k!=='q')continue;const id=QIDS.find(i=>QLAB[i]===e.q.split(' · ')[0]);if(id)qc[id]=(qc[id]||0)+1;}return qc;}
+const posList=a=>a.length?a.map(i=>i+1).join(', '):T.none;
+const groupsText=gs=>gs.length?gs.map(g=>'['+g.map(i=>i+1).join(', ')+']').join('  '):T.none;
+function fmtAnswer(t,r){if(typeof r==='number')return String(r);if(t==='pos2'||t==='pos3')return groupsText(r);return posList(r);}
+function fmtQ(t,arg){const S=(t==='sum2'||t==='pos1')?{n:sn(arg),s:SU[arg].s}:null;return `${T.qlab[t]} · ${T.logq[t](arg,S)}`;}
+function entryQ(e){if(e.k==='g')return e.vals?`${T.guessPrefix}: ${e.vals.map(v=>lab(+v)).join(' · ')}`:e.q;return e.t?fmtQ(e.t,e.arg):e.q;}
+function entryA(e){if(e.k==='g')return e.vals?(e.ok?T.right:T.wrong):e.a;return e.t?fmtAnswer(e.t,e.r):e.a;}
+const OLD_BG=L.bg.qlab;
+function qcFromLog(log){const qc={};for(const e of log){if(e.k!=='q')continue;const id=e.t||QIDS.find(i=>OLD_BG[i]===String(e.q).split(' · ')[0]);if(id)qc[id]=(qc[id]||0)+1;}return qc;}
 let blocked=false;
 function ask(type,arg){
   const g=store.current;if(g.done)return;
   const r=answer(type,arg);const last=g.log[g.log.length-1];
-  if(last&&last.k==='q'&&last.q===r.q){blocked=true;flash(`Това е същият въпрос като последния, затова не се брои. Отговорът е ${r.a}.`,'bad');return;}
-  blocked=false;g.q++;g.log.push({k:'q',...r});save();render();
+  if(last&&last.k==='q'&&last.t===type&&JSON.stringify(last.arg)===JSON.stringify(arg)){blocked=true;flash(T.dup(fmtAnswer(type,r)),'bad');return;}
+  blocked=false;g.q++;g.log.push({k:'q',t:type,arg,r});save();render();
 }
 
 /* ---------- question UI ---------- */
 const sel={sum1:[],sum2:null,cnt3:null,pos1:null,pos4:null};
-const Q={
-  sum:[
-    {id:'sum1',tag:'Сума 1',t:'Избери 3 позиции. Какъв е сборът на картите там?',opts:'pos3'},
-    {id:'sum2',tag:'Сума 2',t:'Избери боя. Какъв е сборът на картите от нея?',opts:'suit'},
-    {id:'sum3',tag:'Сума 3',t:'Какъв е сборът на картинките (A, J, Q, K)?'},
-    {id:'sum4',tag:'Сума 4',t:'Какъв е сборът на числата (2–10)?'}],
-  cnt:[
-    {id:'cnt1',tag:'Брой 1',t:'Колко картинки има общо (A, J, Q, K)?'},
-    {id:'cnt2',tag:'Брой 2',t:'Колко числа има общо (2–10)?'},
-    {id:'cnt3',tag:'Брой 3',t:'Избери стойност. Колко такива карти има?',opts:'rank'}],
-  pos:[
-    {id:'pos1',tag:'Позиция 1',t:'Избери боя. На кои позиции са картите от нея?',opts:'suit'},
-    {id:'pos2',tag:'Позиция 2',t:'На кои позиции са картите с еднаква стойност?'},
-    {id:'pos3',tag:'Позиция 3',t:'На кои позиции са картите с последователни стойности?'},
-    {id:'pos4',tag:'Позиция 4',t:'На коя позиция е най-голямата или най-ниската стойност?',opts:'minmax'}]
-};
+const Q={sum:[['sum1','pos3'],['sum2','suit'],['sum3'],['sum4']],cnt:[['cnt1'],['cnt2'],['cnt3','rank']],pos:[['pos1','suit'],['pos2'],['pos3'],['pos4','minmax']]};
 let tab='sum';
 function renderQ(){
   const box=$('qlist');box.innerHTML='';
-  for(const q of Q[tab]){
+  for(const [id,o] of Q[tab]){
     const d=document.createElement('div');d.className='q';
     let opts='';
-    if(q.opts==='pos3')opts=[...Array(8)].map((_,i)=>`<button class="chip" data-q="${q.id}" data-v="${i}" aria-pressed="${sel.sum1.includes(i)}">${i+1}</button>`).join('');
-    if(q.opts==='suit')opts=SUITS.map(s=>`<button class="chip ${s.red?'r':''}" data-q="${q.id}" data-v="${s.k}" aria-pressed="${sel[q.id]===s.k}" title="${s.n}">${s.s} ${s.n}</button>`).join('');
-    if(q.opts==='rank')opts=RANKS.map((r,i)=>`<button class="chip" data-q="${q.id}" data-v="${i+1}" aria-pressed="${sel.cnt3===i+1}">${r}</button>`).join('');
-    if(q.opts==='minmax')opts=[['max','Най-голяма'],['min','Най-ниска']].map(([k,n])=>`<button class="chip" data-q="pos4" data-v="${k}" aria-pressed="${sel.pos4===k}">${n}</button>`).join('');
-    d.innerHTML=`<span class="tag">${q.tag}</span><div><p>${q.t}</p>${opts?`<div class="opts">${opts}</div>`:''}</div><button class="ask" data-ask="${q.id}">Питай</button>`;
+    if(o==='pos3')opts=[...Array(8)].map((_,i)=>`<button class="chip" data-q="${id}" data-v="${i}" aria-pressed="${sel.sum1.includes(i)}">${i+1}</button>`).join('');
+    if(o==='suit')opts=SUITS.map(s=>`<button class="chip ${s.red?'r':''}" data-q="${id}" data-v="${s.k}" aria-pressed="${sel[id]===s.k}" title="${sn(s.k)}">${s.s} ${sn(s.k)}</button>`).join('');
+    if(o==='rank')opts=RANKS.map((r,i)=>`<button class="chip" data-q="${id}" data-v="${i+1}" aria-pressed="${sel.cnt3===i+1}">${r}</button>`).join('');
+    if(o==='minmax')opts=[['max',T.max],['min',T.min]].map(([k,n])=>`<button class="chip" data-q="pos4" data-v="${k}" aria-pressed="${sel.pos4===k}">${n}</button>`).join('');
+    d.innerHTML=`<span class="tag">${T.qlab[id]}</span><div><p>${T.qtext[id]}</p>${opts?`<div class="opts">${opts}</div>`:''}</div><button class="ask" data-ask="${id}">${T.ask}</button>`;
     box.appendChild(d);
   }
 }
@@ -417,10 +525,10 @@ $('qlist').addEventListener('click',e=>{
     else if(id==='cnt3')sel.cnt3=+v;else sel[id]=v;
     renderQ();return;}
   const b=e.target.closest('[data-ask]');if(!b)return;const id=b.dataset.ask;
-  if(id==='sum1'){if(sel.sum1.length!==3)return flash('Избери точно 3 позиции.','bad');ask('sum1',[...sel.sum1].sort((a,b)=>a-b));}
-  else if(['sum2','pos1'].includes(id)){if(!sel[id])return flash('Избери боя.','bad');ask(id,sel[id]);}
-  else if(id==='cnt3'){if(!sel.cnt3)return flash('Избери стойност.','bad');ask(id,sel.cnt3);}
-  else if(id==='pos4'){if(!sel.pos4)return flash('Избери най-голяма или най-ниска.','bad');ask(id,sel.pos4);}
+  if(id==='sum1'){if(sel.sum1.length!==3)return flash(T.pick3,'bad');ask('sum1',[...sel.sum1].sort((a,b)=>a-b));}
+  else if(['sum2','pos1'].includes(id)){if(!sel[id])return flash(T.pickSuit,'bad');ask(id,sel[id]);}
+  else if(id==='cnt3'){if(!sel.cnt3)return flash(T.pickRank,'bad');ask(id,sel.cnt3);}
+  else if(id==='pos4'){if(!sel.pos4)return flash(T.pickMM,'bad');ask(id,sel.pos4);}
   else ask(id);
   if(id==='sum1')sel.sum1=[];else if(id in sel)sel[id]=null;
   renderQ();if(!blocked)flash('','');
@@ -436,24 +544,24 @@ function renderTable(){
     let html=g.done?cardFace(c):'<div class="card"></div>';
     if(g.done&&g.guess[i]!==''){html=html.replace('class="card face','class="card face '+(+g.guess[i]===c.v?'hit':'miss'));}
     return `<div class="slot"><span class="pos">${i+1}</span>${html}</div>`;}).join('');
-  gr.innerHTML=g.cards.map((_,i)=>`<div class="slot"><select id="g${i}" aria-label="Позиция ${i+1}" ${g.done?'disabled':''}><option value="">?</option>${RANKS.map((r,k)=>`<option value="${k+1}" ${+g.guess[i]===k+1?'selected':''}>${r}</option>`).join('')}</select></div>`).join('');
+  gr.innerHTML=g.cards.map((_,i)=>`<div class="slot"><select id="g${i}" aria-label="${T.posAria(i+1)}" ${g.done?'disabled':''}><option value="">?</option>${RANKS.map((r,k)=>`<option value="${k+1}" ${+g.guess[i]===k+1?'selected':''}>${r}</option>`).join('')}</select></div>`).join('');
   gr.querySelectorAll('select').forEach((s,i)=>s.onchange=()=>{g.guess[i]=s.value;save();});
-  $('actBtns').innerHTML=g.done?(g.daily?'<button class="btn" id="shareBtn">Копирай резултата</button><button class="btn primary" id="newBtn">Към свободна игра</button>':'<button class="btn primary" id="newBtn">Нова игра</button>'):'<button class="btn ghost" id="giveUp">Предавам се</button><button class="btn primary" id="guessBtn">Познай комбинацията</button>';
+  $('actBtns').innerHTML=g.done?(g.daily?`<button class="btn" id="shareBtn">${T.share}</button><button class="btn primary" id="newBtn">${T.toFree}</button>`:`<button class="btn primary" id="newBtn">${T.newGame}</button>`):`<button class="btn ghost" id="giveUp">${T.giveUp}</button><button class="btn primary" id="guessBtn">${T.guess}</button>`;
   if(g.done){$('newBtn').onclick=()=>{flash('');g.daily?leaveDaily():newGame();};if(g.daily)$('shareBtn').onclick=shareDaily;}
   else{$('guessBtn').onclick=doGuess;$('giveUp').onclick=giveUp;}
 }
 let giveArmed=false;
 function giveUp(){
-  if(!giveArmed){giveArmed=true;flash('Натисни „Предавам се“ още веднъж, за да видиш картите.','bad');setTimeout(()=>giveArmed=false,4000);return;}
-  giveArmed=false;finish(false);flash('Ето каква беше комбинацията.','bad');
+  if(!giveArmed){giveArmed=true;flash(T.giveArm,'bad');setTimeout(()=>giveArmed=false,4000);return;}
+  giveArmed=false;finish(false);flash(T.reveal,'bad');
 }
 function doGuess(){
   const g=store.current;
-  if(g.guess.some(x=>x===''))return flash('Попълни стойност за всичките 8 позиции.','bad');
+  if(g.guess.some(x=>x===''))return flash(T.fillAll,'bad');
   g.g++;const ok=g.guess.every((v,i)=>+v===g.cards[i].v);
-  g.log.push({k:'g',q:'Опит: '+g.guess.map(v=>lab(+v)).join(' · '),a:ok?'вярно':'грешно'});
-  if(ok){finish(true);flash(`Позна! ${g.q} въпроса и ${g.g} ${g.g===1?'опит':'опита'}.`,'good');}
-  else{save();render();flash('Не е вярно. Продължавай.','bad');}
+  g.log.push({k:'g',vals:g.guess.map(Number),ok});
+  if(ok){finish(true);flash(T.won(g.q,g.g),'good');}
+  else{save();render();flash(T.notRight,'bad');}
 }
 function finish(won){
   const g=store.current;g.done=true;g.won=won;
@@ -461,8 +569,9 @@ function finish(won){
 }
 
 function renderLog(){
-  const g=store.current;$('gameNo').textContent='Игра №'+(store.games.length+(g.done?0:1));
-  $('log').innerHTML=g.log.length?g.log.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<li class="${e.k==='g'?'guess':''}"><span class="n">${i+1}.</span><div><div class="qq">${e.q}</div><div class="aa" style="${e.a==='вярно'?'color:var(--ok)':''}">${e.a}</div></div></li>`).join(''):'<li><span></span><span class="empty">Още няма въпроси. Започни от панела вляво.</span></li>';
+  const g=store.current;$('gameNo').textContent=T.gameNo(store.games.length+(g.done?0:1));
+  $('log').innerHTML=g.log.length?g.log.map((e,i)=>({e,i})).reverse().map(({e,i})=>{const good=e.k==='g'&&(e.vals?e.ok:e.a==='вярно');
+    return `<li class="${e.k==='g'?'guess':''}"><span class="n">${i+1}.</span><div><div class="qq">${entryQ(e)}</div><div class="aa" style="${good?'color:var(--ok)':''}">${entryA(e)}</div></div></li>`;}).join(''):`<li><span></span><span class="empty">${T.emptyLog}</span></li>`;
   const l=document.querySelector('.log');l.scrollTop=0;
   $('cQ').textContent=g.q;$('cG').textContent=g.g;$('cT').textContent=g.q+g.g;
 }
@@ -473,39 +582,37 @@ function renderStats(){
   const G=store.games,W=G.filter(x=>x.won);
   const avg=a=>a.length?(a.reduce((s,x)=>s+x,0)/a.length).toFixed(1):'–';
   const best=W.length?Math.min(...W.map(x=>x.q+x.g)):'–';
-  $('kpis').innerHTML=[
-    [G.length,'изиграни игри'],[W.length,'познати'],[G.length?Math.round(W.length/G.length*100)+'%':'–','успеваемост'],
-    [avg(W.map(x=>x.q)),'ср. въпроси при успех'],[avg(W.map(x=>x.g)),'ср. опити при успех'],[best,'най-добър резултат (общо ходове)']
-  ].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join('');
+  $('kpis').innerHTML=[G.length,W.length,G.length?Math.round(W.length/G.length*100)+'%':'–',avg(W.map(x=>x.q)),avg(W.map(x=>x.g)),best]
+    .map((b,k)=>`<div class="kpi"><b>${b}</b><span>${T.kpi[k]}</span></div>`).join('');
   const f=Array(13).fill(0);G.forEach(x=>x.cards.forEach(c=>f[c.v-1]++));const mx=Math.max(1,...f);
   $('freq').innerHTML=f.map((n,i)=>`<div class="bar"><i style="height:${n/mx*100}%"></i><em>${n}</em><small>${RANKS[i]}</small></div>`).join('');
   const QG=G.filter(x=>x.qc);
   const qav=QIDS.map(i=>QG.length?QG.reduce((s,x)=>s+(x.qc[i]||0),0)/QG.length:0);const qmx=Math.max(0.0001,...qav);
-  const row=i=>{const k=QIDS.indexOf(i);return `<div class="qrow"><span class="ql">${QLAB[i]}</span><span class="qt"><i style="width:${qav[k]/qmx*100}%"></i></span><span class="qv">${QG.length?qav[k].toFixed(2):'–'}</span></div>`;};
-  $('qstats').innerHTML=[['Сума','sum'],['Брой','cnt'],['Позиция','pos']].map(([t,p])=>`<div class="qcol"><h3>${t}</h3>${QIDS.filter(i=>i.startsWith(p)).map(row).join('')}</div>`).join('');
-  $('qstatsNote').textContent=QG.length?`По данни от ${QG.length} ${QG.length===1?'игра':'игри'}.`+(QG.length<G.length?` ${G.length-QG.length} по-стари игри не са включени, защото за тях не е записано кои въпроси са зададени.`:''):'Ще се попълни след първата завършена игра.';
-  const hm=$('histMore');hm.hidden=G.length<=10;hm.textContent=histAll?'Покажи само последните 10':`Покажи всички (${G.length})`;
-  $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().slice(0,histAll?G.length:10).map(({x,i})=>`<tr><td>${i+1}${x.daily?'<span class="dtag">DAILY</span>':''}</td><td>${new Date(x.d).toLocaleDateString('bg-BG',{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?'позната':'предадена'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Тук ще се появят комбинациите от завършените игри.</td></tr>';
+  const row=i=>{const k=QIDS.indexOf(i);return `<div class="qrow"><span class="ql">${T.qlab[i]}</span><span class="qt"><i style="width:${qav[k]/qmx*100}%"></i></span><span class="qv">${QG.length?qav[k].toFixed(2):'–'}</span></div>`;};
+  $('qstats').innerHTML=[['catsum','sum'],['catcnt','cnt'],['catpos','pos']].map(([t,p])=>`<div class="qcol"><h3>${T[t]}</h3>${QIDS.filter(i=>i.startsWith(p)).map(row).join('')}</div>`).join('');
+  $('qstatsNote').textContent=QG.length?T.qNote(QG.length,G.length-QG.length):T.qNoteEmpty;
+  const hm=$('histMore');hm.hidden=G.length<=10;hm.textContent=histAll?T.showLast:T.showAll(G.length);
+  $('hist').innerHTML=G.length?G.map((x,i)=>({x,i})).reverse().slice(0,histAll?G.length:10).map(({x,i})=>`<tr><td>${i+1}${x.daily?'<span class="dtag">DAILY</span>':''}</td><td>${new Date(x.d).toLocaleDateString(T.locale,{day:'2-digit',month:'2-digit'})} ${new Date(x.d).toLocaleTimeString(T.locale,{hour:'2-digit',minute:'2-digit'})}</td><td class="combo">${x.cards.map(c=>`<span class="${SU[c.s].red?'red-t':''}">${lab(c.v)}${SU[c.s].s}</span>`).join(' ')}</td><td>${x.q}</td><td>${x.g}</td><td><span class="pill ${x.won?'w':'l'}">${x.won?T.solved:T.gaveUp}</span></td></tr>`).join(''):`<tr><td colspan="6" class="empty">${T.histEmpty}</td></tr>`;
 }
 $('histMore').onclick=()=>{histAll=!histAll;renderStats();};
 let resetArmed=false;
 $('resetBtn').onclick=()=>{
-  if(!resetArmed){resetArmed=true;$('resetBtn').textContent='Сигурна ли си? Натисни пак';setTimeout(()=>{resetArmed=false;$('resetBtn').textContent='Изчисти статистиката';},4000);return;}
-  resetArmed=false;store.games=[];save();$('resetBtn').textContent='Изчисти статистиката';renderStats();renderLog();
+  if(!resetArmed){resetArmed=true;$('resetBtn').textContent=T.resetArm;setTimeout(()=>{resetArmed=false;$('resetBtn').textContent=T.reset;},4000);return;}
+  resetArmed=false;store.games=[];save();$('resetBtn').textContent=T.reset;renderStats();renderLog();
 };
 
 function notesObj(){const g=store.current;if(!g.notes)g.notes={suit:Array(8).fill(''),txt:Array(8).fill(''),free:''};return g.notes;}
 function renderNotes(){
   const n=notesObj();
-  $('nslots').innerHTML=n.suit.map((su,i)=>{const S=SU[su];return `<div class="nslot" data-suit="${su}"><div class="nhead"><b>${i+1}</b><span class="big ${S&&S.red?'red-t':''}">${S?S.s:''}</span></div><div class="nsuits">${SUITS.map(s=>`<button class="chip ${s.red?'r':''}" data-ni="${i}" data-ns="${s.k}" aria-pressed="${su===s.k}" title="${s.n}" aria-label="Позиция ${i+1}: ${s.n}">${s.s}</button>`).join('')}</div><textarea id="nt${i}" data-nt="${i}" aria-label="Бележка за позиция ${i+1}" placeholder="бележка…">${n.txt[i].replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea></div>`;}).join('');
+  $('nslots').innerHTML=n.suit.map((su,i)=>{const S=SU[su];return `<div class="nslot" data-suit="${su}"><div class="nhead"><b>${i+1}</b><span class="big ${S&&S.red?'red-t':''}">${S?S.s:''}</span></div><div class="nsuits">${SUITS.map(s=>`<button class="chip ${s.red?'r':''}" data-ni="${i}" data-ns="${s.k}" aria-pressed="${su===s.k}" title="${sn(s.k)}" aria-label="${T.posAria(i+1)}: ${sn(s.k)}">${s.s}</button>`).join('')}</div><textarea id="nt${i}" data-nt="${i}" aria-label="${T.noteAria(i+1)}" placeholder="${T.notePh}">${n.txt[i].replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea></div>`;}).join('');
   $('freeNote').value=n.free;
 }
 $('nslots').addEventListener('click',e=>{const b=e.target.closest('[data-ns]');if(!b)return;const n=notesObj(),i=+b.dataset.ni;n.suit[i]=n.suit[i]===b.dataset.ns?'':b.dataset.ns;save();renderNotes();});
 $('nslots').addEventListener('input',e=>{const t=e.target.closest('[data-nt]');if(!t)return;notesObj().txt[+t.dataset.nt]=t.value;save();});
 $('freeNote').addEventListener('input',e=>{notesObj().free=e.target.value;save();});
 let clearArmed=false;
-$('clearNotes').onclick=()=>{const b=$('clearNotes');if(!clearArmed){clearArmed=true;b.textContent='Натисни пак, за да изчистиш';setTimeout(()=>{clearArmed=false;b.textContent='Изчисти бележките';},4000);return;}
-  clearArmed=false;b.textContent='Изчисти бележките';store.current.notes=null;save();renderNotes();};
+$('clearNotes').onclick=()=>{const b=$('clearNotes');if(!clearArmed){clearArmed=true;b.textContent=T.clearNotesArm;setTimeout(()=>{clearArmed=false;b.textContent=T.clearNotes;},4000);return;}
+  clearArmed=false;b.textContent=T.clearNotes;store.current.notes=null;save();renderNotes();};
 $('notes').addEventListener('toggle',()=>{store.notesOpen=$('notes').open;save();});
 
 function exportCode(){
@@ -514,29 +621,30 @@ function exportCode(){
 }
 function parseCode(code){
   code=code.trim().replace(/\s+/g,'');
-  if(!code.startsWith('OK1-'))throw new Error('Кодът трябва да започва с OK1-. Копирай го целия от другото устройство.');
+  if(!code.startsWith('OK1-'))throw new Error('prefix');
   const body=atob(code.slice(4));if(!body)return [];
   return body.split('~').map(r=>{const [d,cs,q,g,w,qs]=r.split('.');
-    const cards=cs.match(/[0-9a-d][CDHS]/g);if(!cards||cards.length!==8)throw new Error('Кодът е повреден.');
+    const cards=cs.match(/[0-9a-d][CDHS]/g);if(!cards||cards.length!==8)throw new Error('broken');
     return {d:parseInt(d,36),cards:cards.map(t=>({v:parseInt(t[0],16),s:t[1]})),q:+q,g:+g,won:w==='1',...(qs?{qc:Object.fromEntries(qs.split('_').map((n,k)=>[QIDS[k],+n]))}:{})};});
 }
 $('copyCode').onclick=()=>{const t=$('exportCode');
-  const done=()=>{$('copyCode').textContent='Копирано';setTimeout(()=>$('copyCode').textContent='Копирай кода',2000);};
+  const done=()=>{$('copyCode').textContent=T.copied;setTimeout(()=>$('copyCode').textContent=T.copyCode,2000);};
   const fb=()=>{t.focus();t.select();try{document.execCommand('copy');done();}catch(e){}};
   try{navigator.clipboard.writeText(t.value).then(done,fb);}catch(e){fb();}};
 $('mergeBtn').onclick=()=>{
   const m=$('syncMsg');let incoming;
-  try{incoming=parseCode($('importCode').value);}catch(e){m.className='msg bad';m.textContent=e.message.startsWith('Кодът')?e.message:'Кодът не може да се прочете. Провери дали е копиран целият.';return;}
+  try{incoming=parseCode($('importCode').value);}catch(e){m.className='msg bad';m.textContent=e.message==='prefix'?T.errPrefix:e.message==='broken'?T.errBroken:T.errRead;return;}
   const key=x=>x.d+'|'+x.cards.map(c=>c.v+c.s).join('');
   const have=new Set(store.games.map(key));let added=0;
   for(const x of incoming){if(!have.has(key(x))){store.games.push(x);have.add(key(x));added++;}else if(x.qc){const e=store.games.find(y=>key(y)===key(x));if(e&&!e.qc)e.qc=x.qc;}}
   store.games.sort((a,b)=>a.d-b.d);save();renderStats();renderLog();
-  $('importCode').value='';m.className='msg good';m.textContent=added?`Добавени ${added} ${added===1?'игра':'игри'}.`:'Няма нови игри, всички вече са тук.';
+  $('importCode').value='';m.className='msg good';m.textContent=added?T.added(added):T.noneAdded;
 };
 
 function render(){renderDaily();renderTable();renderLog();renderStats();}
-(()=>{const c=store.current,L=store.games[store.games.length-1];if(c&&c.done&&L&&!L.qc&&JSON.stringify(L.cards)===JSON.stringify(c.cards)){L.qc=qcFromLog(c.log);save();}})();
+(()=>{const c=store.current,G=store.games,Lg=G[G.length-1];if(c&&c.done&&Lg&&!Lg.qc&&JSON.stringify(Lg.cards)===JSON.stringify(c.cards)){Lg.qc=qcFromLog(c.log);save();}})();
 if(store.notesOpen)$('notes').open=true;
+applyStatic();save();
 checkDay();
 if(!store.current)newGame();else{render();renderNotes();}
 renderQ();
